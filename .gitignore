@@ -1,0 +1,30 @@
+﻿# Virtual Environment
+venv/
+env/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Large Model Weights (>100MB)
+model/
+*.pth
+*.pt
+*.bin
+*.safetensors
+*.onnx
+
+# Databases & local state
+krishi_saathi.db
+*.sqlite3
+*.db
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
