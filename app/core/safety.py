@@ -6,6 +6,10 @@ DISCLAIMER_HINDI = "\n\n📌 *महत्वपूर्ण कृषि सू
 
 DISCLAIMER_ENGLISH = "\n\n📌 *Important Agricultural Notice:* This advisory is grounded in ICAR and government research package of practices. Always wear personal protective equipment (mask & gloves) during spraying. In critical infestations, contact your local Krishi Vigyan Kendra (KVK) or Kisan Call Centre: 1800-180-1551."
 
+GENERAL_NOTICE_HINDI = "\n\n📌 *महत्वपूर्ण कृषि सूचना:* यह सलाह भारतीय कृषि अनुसंधान परिषद (ICAR) एवं वैज्ञानिक संस्तुतियों पर आधारित है। किसी भी आपात स्थिति में नजदीकी कृषि विज्ञान केंद्र (KVK) या किसान कॉल सेंटर 1800-180-1551 पर संपर्क करें।"
+
+GENERAL_NOTICE_ENGLISH = "\n\n📌 *Important Agricultural Notice:* This advisory is grounded in ICAR and government scientific package of practices. For local ground assistance, contact your nearest Krishi Vigyan Kendra (KVK) or Kisan Call Centre: 1800-180-1551."
+
 # Recommended CIBRC-Approved Safe Alternatives
 SAFE_ALTERNATIVES = {
     "monocrotophos": {
@@ -94,7 +98,8 @@ def validate_agricultural_safety(
     response_text: str,
     weather_rain_prob: float = 0.0,
     wind_speed: float = 0.0,
-    lang: str = "hi"
+    lang: str = "hi",
+    is_spray_relevant: bool = False
 ) -> Dict[str, Any]:
     text_lower = response_text.lower()
     
@@ -105,7 +110,6 @@ def validate_agricultural_safety(
             flagged_banned.append(chemical)
 
     cleaned_text = response_text
-
     safety_warnings = []
     
     if flagged_banned:
@@ -120,27 +124,36 @@ def validate_agricultural_safety(
         )
         safety_warnings.append(warning_msg)
 
-    # 2. Weather Spray Constraint
-    if weather_rain_prob >= 30.0:
-        warning_msg = (
-            "⚠️ मौसम चेतावनी: आगामी 48 घंटों में बारिश की संभावना है। पर्ण छिड़काव (Foliar Spray) स्थगित रखें।"
-            if lang == "hi"
-            else "⚠️ Weather Alert: Rainfall anticipated within 48 hours. Postpone foliar spraying to prevent chemical wash-off."
-        )
-        safety_warnings.append(warning_msg)
-    elif wind_speed > 15.0:
-        warning_msg = (
-            f"⚠️ हवा की गति ({wind_speed} किमी/घंटा) अधिक है, हवा के विपरीत दिशा में छिड़काव न करें।"
-            if lang == "hi"
-            else f"⚠️ High Wind Warning ({wind_speed} km/h): Do not spray against the wind direction to avoid drift hazards."
-        )
-        safety_warnings.append(warning_msg)
+    # 2. Weather Spray Constraint (Applied only when spray/chemical operation is active)
+    has_chemical_keywords = any(kw in text_lower for kw in [
+        "कीटनाशक", "फफूंदनाशी", "pesticide", "fungicide", "दवा का छिड़काव", "chemical spray", "पर्ण छिड़काव करें"
+    ])
+    spray_active = is_spray_relevant or has_chemical_keywords
+
+    if spray_active:
+        if weather_rain_prob >= 30.0:
+            warning_msg = (
+                "⚠️ मौसम चेतावनी: आगामी 48 घंटों में बारिश की संभावना है। पर्ण छिड़काव (Foliar Spray) स्थगित रखें।"
+                if lang == "hi"
+                else "⚠️ Weather Alert: Rainfall anticipated within 48 hours. Postpone foliar spraying to prevent chemical wash-off."
+            )
+            safety_warnings.append(warning_msg)
+        elif wind_speed > 15.0:
+            warning_msg = (
+                f"⚠️ हवा की गति ({wind_speed} किमी/घंटा) अधिक है, हवा के विपरीत दिशा में छिड़काव न करें।"
+                if lang == "hi"
+                else f"⚠️ High Wind Warning ({wind_speed} km/h): Do not spray against the wind direction to avoid drift hazards."
+            )
+            safety_warnings.append(warning_msg)
 
     final_text = cleaned_text
     if safety_warnings:
         final_text += "\n\n" + "\n".join(safety_warnings)
         
-    final_text += (DISCLAIMER_HINDI if lang == "hi" else DISCLAIMER_ENGLISH)
+    if spray_active:
+        final_text += (DISCLAIMER_HINDI if lang == "hi" else DISCLAIMER_ENGLISH)
+    else:
+        final_text += (GENERAL_NOTICE_HINDI if lang == "hi" else GENERAL_NOTICE_ENGLISH)
 
     return {
         "safe_response": final_text,

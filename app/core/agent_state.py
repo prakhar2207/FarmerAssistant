@@ -26,6 +26,8 @@ class AgentState:
     intent_confidence: float = 1.0
     crop: Optional[str] = None
     growth_stage: Optional[str] = None
+    target_day: str = "today"
+    action_type: Optional[str] = None
     symptoms: List[str] = field(default_factory=list)
     missing_slots: List[str] = field(default_factory=list)
     needs_clarification: bool = False
@@ -39,6 +41,7 @@ class AgentState:
     humidity: int = 65
     wind_speed: float = 8.0
     rain_prob: int = 10
+    rain_amount_mm: float = 0.0
     rain_expected_48h: bool = False
     soil_data: Optional[Dict[str, Any]] = None
 
@@ -53,9 +56,14 @@ class AgentState:
     # 7. Specialized Tool Execution & RAG
     tool_name: Optional[str] = None
     tool_output: str = ""
+    tools_used: List[str] = field(default_factory=list)
+    weather_used: bool = False
+    soil_used: bool = False
+    rag_used: bool = False
     rag_context: Dict[str, Any] = field(default_factory=dict)
     citations: List[Dict[str, Any]] = field(default_factory=list)
     follow_up_suggestions: List[str] = field(default_factory=list)
+    response_plan: Optional[Dict[str, Any]] = None
 
     # 8. Output & User Experience Badges
     final_response: str = ""
@@ -80,8 +88,11 @@ class AgentState:
             "thought_steps": self.thought_steps,
             "citations": self.citations,
             "follow_up_suggestions": self.follow_up_suggestions,
-            "weather_summary": f"{self.location_label}: {self.temp}°C"
+            "weather_summary": f"{self.location_label}: {self.temp}°C",
+            "tools_used": self.tools_used
         }
         if self.vision_result:
             d["vision"] = self.vision_result
+        if self.response_plan:
+            d["response_plan"] = self.response_plan
         return d
