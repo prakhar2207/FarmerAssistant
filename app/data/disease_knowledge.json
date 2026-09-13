@@ -1,0 +1,262 @@
+{
+  "tomato_early_blight": {
+    "crop": "टमाटर (Tomato)",
+    "crop_en": "Tomato",
+    "name_hindi": "टमाटर का अगेती झुलसा (Early Blight)",
+    "name_en": "Tomato Early Blight",
+    "pathogen": "अल्टरनेरिया सोलेनाई (Alternaria solani - फफूंद)",
+    "pathogen_en": "Alternaria solani (Fungus)",
+    "symptoms": "निचली पत्तियों पर गहरे भूरे या काले संकेंद्री छल्ले (Target Board spots) बनते हैं। पत्तियां पीली पड़कर सूख जाती हैं।",
+    "symptoms_en": "Concentric dark brown to black rings (target board pattern) on lower foliage. Leaves turn chlorotic and wither.",
+    "causes": "उच्च तापमान (24-30°C) और उच्च आर्द्रता या रुक-रुक कर होने वाली बारिश।",
+    "causes_en": "Warm temperatures (24-30°C) combined with high relative humidity and intermittent rainfall.",
+    "immediate_action": "संक्रमित निचली पत्तियों को तोड़कर खेत से दूर गड्ढे में दबा दें। पौधों के बीच हवा का संचार बनाए रखें।",
+    "immediate_action_en": "Prune infected lower foliage and bury away from the field. Maintain adequate plant spacing for airflow.",
+    "organic_ipm": "ट्राइकोडर्मा विरिडी (Trichoderma viride) 5 ग्राम प्रति लीटर या स्यूडोमोनास फ्लोरोसेंस का 10 दिन के अंतराल पर छिड़काव करें।",
+    "organic_ipm_en": "Foliar spray of Trichoderma viride or Pseudomonas fluorescens @ 5g/L at 10-day intervals.",
+    "chemical_treatment": {
+      "name": "मैंकोजेब 75% डब्ल्यूपी (Mancozeb / Dithane M-45)",
+      "dose": "2.5 ग्राम प्रति लीटर पानी (15 लीटर टंकी में 35-40 ग्राम)",
+      "precaution": "स्प्रे हमेशा सुबह या शाम करें। बारिश की संभावना होने पर स्टिकर (Spreader) अवश्य मिलाएं।"
+    },
+    "chemical_treatment_en": {
+      "name": "Mancozeb 75% WP (Dithane M-45)",
+      "dose": "2.5g per litre of water (35-40g per 15L knapsack sprayer)",
+      "precaution": "Apply during morning or late afternoon. Add agricultural sticker/spreader in rainy conditions."
+    }
+  },
+  "tomato_late_blight": {
+    "crop": "टमाटर (Tomato)",
+    "crop_en": "Tomato",
+    "name_hindi": "टमाटर का पछेती झुलसा (Late Blight)",
+    "name_en": "Tomato Late Blight",
+    "pathogen": "फाइटोफ्थोरा इनफेस्टांस (Phytophthora infestans)",
+    "pathogen_en": "Phytophthora infestans (Oomycete)",
+    "symptoms": "पत्तियों के किनारों पर जलसिक्त (water-soaked) काले-भूरे धब्बे, नम मौसम में पत्तियों के नीचे सफेद फफूंद दिखती है। फल भी कड़े और काले हो जाते हैं।",
+    "symptoms_en": "Water-soaked dark lesions at leaf margins, white fuzzy mildew on leaf undersides in humid conditions. Fruits turn hard and dark.",
+    "causes": "ठंडा व बादलों से घिरा नम मौसम (तापमान 12-20°C और आर्द्रता > 90%)।",
+    "causes_en": "Cool, overcast weather (12-20°C) with prolonged relative humidity exceeding 90%.",
+    "immediate_action": "खेत में पानी भराव रोकें और तुरंत फफूंदनाशी का सुरक्षात्मक छिड़काव करें।",
+    "immediate_action_en": "Ensure proper drainage to prevent waterlogging and immediately initiate protective fungicide spray.",
+    "organic_ipm": "तांबे का घोल (बोर्डो मिश्रण 1%) या कॉपर ऑक्सीक्लोराइड 3 ग्राम/लीटर का स्प्रे करें।",
+    "organic_ipm_en": "Apply 1% Bordeaux mixture or Copper Oxychloride @ 3g/L as preventive biological barrier.",
+    "chemical_treatment": {
+      "name": "साइमोक्सानिल + मैंकोजेब (Curzate M8) या मेटालैक्सिल + मैंकोजेब (Ridomil Gold)",
+      "dose": "2 ग्राम प्रति लीटर पानी (15 लीटर टंकी में 30 ग्राम)",
+      "precaution": "रोग तेजी से फैलता है, लक्षण दिखते ही बिना देरी किए पूरे खेत में स्प्रे करें।"
+    },
+    "chemical_treatment_en": {
+      "name": "Cymoxanil 8% + Mancozeb 64% (Curzate M8) or Metalaxyl + Mancozeb",
+      "dose": "2g per litre of water (30g per 15L sprayer)",
+      "precaution": "Late blight spreads aggressively; apply immediately across entire field upon initial detection."
+    }
+  },
+  "potato_late_blight": {
+    "crop": "आलू (Potato)",
+    "crop_en": "Potato",
+    "name_hindi": "आलू का पछेती झुलसा (Potato Late Blight)",
+    "name_en": "Potato Late Blight",
+    "pathogen": "फाइटोफ्थोरा इनफेस्टांस (Phytophthora infestans)",
+    "pathogen_en": "Phytophthora infestans",
+    "symptoms": "पत्तियों के सिरों पर अनियमित काले धब्बे, कोहरे में तीव्र फैलाव और 3-4 दिन में पूरा पौधा झुलस जाता है।",
+    "symptoms_en": "Irregular dark necrosis spreading rapidly under foggy conditions; entire foliage blights within 3-4 days.",
+    "causes": "शीत ऋतु में लगातार कोहरा, ओस और 10-18°C तापमान।",
+    "causes_en": "Persistent winter fog, heavy morning dew, and temperatures between 10-18°C.",
+    "immediate_action": "संक्रमित पत्तियों को नष्ट करें और सिंचाई तुरंत रोक दें।",
+    "immediate_action_en": "Halt surface irrigation and remove severely blighted top vines.",
+    "organic_ipm": "कॉपर सल्फेट + बुझा चूना (बोर्डो मिश्रण 1%) का सुरक्षात्मक छिड़काव करें।",
+    "organic_ipm_en": "Prophylactic spray of Bordeaux mixture 1% before anticipated fog spell.",
+    "chemical_treatment": {
+      "name": "मेटालैक्सिल 8% + मैंकोजेब 64% डब्ल्यूपी (Ridomil Gold)",
+      "dose": "2.5 ग्राम प्रति लीटर पानी",
+      "precaution": "कोहरा छाने से पहले ही छिड़काव कर लें ताकि फफूंद पत्ती में प्रवेश न कर सके।"
+    },
+    "chemical_treatment_en": {
+      "name": "Metalaxyl 8% + Mancozeb 64% WP (Ridomil Gold)",
+      "dose": "2.5g per litre of water",
+      "precaution": "Apply preventively prior to dense fog spells."
+    }
+  },
+  "wheat_yellow_rust": {
+    "crop": "गेहूं (Wheat)",
+    "crop_en": "Wheat",
+    "name_hindi": "गेहूं का पीला रतुआ / हल्दी रोग (Stripe / Yellow Rust)",
+    "name_en": "Wheat Stripe / Yellow Rust",
+    "pathogen": "पक्सीनिया स्ट्राइफॉर्मिस (Puccinia striiformis)",
+    "pathogen_en": "Puccinia striiformis (Fungus)",
+    "symptoms": "पत्तियों की ऊपरी सतह पर हल्दी जैसी पीली धारियां/पाउडर दिखाई देता है, छूने पर उंगलियों पर पीला पाउडर चिपकता है।",
+    "symptoms_en": "Linear rows of yellow/orange powdery pustules along leaf veins resembling turmeric dust on touch.",
+    "causes": "ठंडी व नम हवा (10-15°C) और पश्चिमी विक्षोभ की बारिश।",
+    "causes_en": "Cool humid winds (10-15°C) following western disturbance showers.",
+    "immediate_action": "खेत में जहां भी पीला रतुआ का पैच दिखे, वहां तुरंत निशान लगाकर फफूंदनाशी स्प्रे करें।",
+    "immediate_action_en": "Isolate initial infected foci patch and apply targeted triazole spray immediately.",
+    "organic_ipm": "रोग प्रतिरोधी किस्में (जैसे HD-3086, DBW-187, DBW-222) ही बोएं।",
+    "organic_ipm_en": "Deploy resistant varieties (HD-3086, DBW-187, PBW-502).",
+    "chemical_treatment": {
+      "name": "प्रोपिकोनाजोल 25% ईसी (Tilt 25 EC) या टेबुकोनाजोल",
+      "dose": "1 मिली प्रति लीटर पानी (200 मिली प्रति एकड़ 200 लीटर पानी में)",
+      "precaution": "धूप निकलने पर ही स्प्रे करें। हवा के बहाव की दिशा में छिड़काव करें।"
+    },
+    "chemical_treatment_en": {
+      "name": "Propiconazole 25% EC (Tilt) or Tebuconazole",
+      "dose": "1 ml per litre of water (200 ml per acre in 200L water)",
+      "precaution": "Spray during clear sunlit midday hours in the windward direction."
+    }
+  },
+  "rice_blast": {
+    "crop": "धान (Rice / Paddy)",
+    "crop_en": "Rice",
+    "name_hindi": "धान का झोंका रोग (Rice Blast Disease)",
+    "name_en": "Rice Blast",
+    "pathogen": "मैग्नापोर्थे ओराइजी (Magnaporthe oryzae)",
+    "pathogen_en": "Magnaporthe oryzae",
+    "symptoms": "पत्तियों पर आंख या नाव के आकार के धब्बे जिनके किनारे भूरे व केंद्र धूसर (ash grey) होते हैं। गर्दन टूटने पर बालियां सफेद हो जाती हैं।",
+    "symptoms_en": "Spindle/boat-shaped lesions with brown margins and grey center on leaves; neck rot turns panicles white.",
+    "causes": "अधिक नाइट्रोजन, घनी रोपाई और 20-25°C तापमान संग उच्च नमी।",
+    "causes_en": "Excessive nitrogenous fertilization, dense canopy, and cool nights (20-25°C) with prolonged dew.",
+    "immediate_action": "यूरिया का प्रयोग तुरंत बंद करें और खेत में पानी का स्तर संतुलित रखें।",
+    "immediate_action_en": "Immediately withhold urea top-dressing and regulate field standing water.",
+    "organic_ipm": "स्यूडोमोनास फ्लोरोसेंस 10 ग्राम/लीटर का पर्णीय छिड़काव करें।",
+    "organic_ipm_en": "Foliar application of Pseudomonas fluorescens @ 10g/L.",
+    "chemical_treatment": {
+      "name": "ट्राइसाइक्लाजोल 75% डब्ल्यूपी (Beam / Baan)",
+      "dose": "0.6 ग्राम प्रति लीटर पानी (15 लीटर टंकी में 10 ग्राम)",
+      "precaution": "रोग के शुरुआती लक्षण दिखते ही स्प्रे करें। 12 दिन बाद आवश्यकता पड़ने पर दोहराएं।"
+    },
+    "chemical_treatment_en": {
+      "name": "Tricyclazole 75% WP (Beam / Baan)",
+      "dose": "0.6g per litre of water (10g per 15L sprayer)",
+      "precaution": "Spray upon noticing initial spindle lesions; repeat after 12 days if needed."
+    }
+  },
+  "cotton_leaf_curl": {
+    "crop": "कपास (Cotton)",
+    "crop_en": "Cotton",
+    "name_hindi": "कपास का पत्ती मरोड़ विषाणु (Cotton Leaf Curl Virus - CLCuV)",
+    "name_en": "Cotton Leaf Curl Virus",
+    "pathogen": "बेगोमोवायरस (Begomovirus - सफेद मक्खी द्वारा प्रसारित)",
+    "pathogen_en": "Cotton Leaf Curl Begomovirus (Whitefly vector)",
+    "symptoms": "पत्तियों की नसें मोटी हो जाती हैं, पत्तियां ऊपर या नीचे की ओर मुड़कर प्यालेनुमा हो जाती हैं और विकास रुक जाता है।",
+    "symptoms_en": "Upward/downward leaf curling, vein thickening, enation, and severe plant stunting.",
+    "causes": "सफेद मक्खी (Bemisia tabaci) का अनियंत्रित प्रकोप।",
+    "causes_en": "Proliferation of whitefly vectors in hot humid weather.",
+    "immediate_action": "संक्रमित पौधों को उखाड़कर नष्ट करें और सफेद मक्खी के नियंत्रण के लिए पीले चिपचिपे कार्ड (Yellow Sticky Traps) लगाएं।",
+    "immediate_action_en": "Rogue out infected plants early and install 15-20 yellow sticky traps per acre.",
+    "organic_ipm": "नीम का तेल (1500 ppm) 4 मिली/लीटर का छिड़काव करें।",
+    "organic_ipm_en": "Neem oil 1500 ppm @ 4 ml/L as preventive vector deterrent.",
+    "chemical_treatment": {
+      "name": "डाइफेन्थियुरॉन 50% डब्ल्यूपी या पाइरीप्रॉक्सीफेन 10% ईसी",
+      "dose": "1.2 ग्राम प्रति लीटर पानी",
+      "precaution": "सफेद मक्खी की रोकथाम हेतु पत्ती के निचले भाग तक दवा का छिड़काव करें।"
+    },
+    "chemical_treatment_en": {
+      "name": "Diafenthiuron 50% WP or Pyriproxyfen 10% EC",
+      "dose": "1.2g per litre of water",
+      "precaution": "Direct spray towards leaf undersides to target whitefly colonies."
+    }
+  },
+  "maize_common_rust": {
+    "crop": "मक्का (Maize)",
+    "crop_en": "Maize",
+    "name_hindi": "मक्का का सामान्य रतुआ (Common Maize Rust)",
+    "name_en": "Common Maize Rust",
+    "pathogen": "पक्सीनिया सोरघी (Puccinia sorghi)",
+    "pathogen_en": "Puccinia sorghi",
+    "symptoms": "पत्ती की दोनों सतहों पर गोल या अंडाकार भूरे-लाल रंग के उभरे हुए दाने (pustules) बनते हैं।",
+    "symptoms_en": "Golden-brown to cinnamon pustules scattered on both leaf surfaces.",
+    "causes": "ठंडा व नम मौसम (तापमान 16-24°C और आर्द्रता > 95%)।",
+    "causes_en": "Cool humid environment (16-24°C) with prolonged dew.",
+    "immediate_action": "खेत में हवा का संचार ठीक रखें और संतुलित पोटाश दें।",
+    "immediate_action_en": "Ensure proper spacing and balanced potassium nutrition.",
+    "organic_ipm": "ट्राइकोडर्मा विरिडी 5 ग्राम/लीटर का छिड़काव करें।",
+    "organic_ipm_en": "Trichoderma viride @ 5g/L foliar application.",
+    "chemical_treatment": {
+      "name": "मैंकोजेब 75% डब्ल्यूपी (Dithane M-45)",
+      "dose": "2.5 ग्राम प्रति लीटर पानी",
+      "precaution": "फसल में दाना बनने की अवस्था तक निगरानी रखें।"
+    },
+    "chemical_treatment_en": {
+      "name": "Mancozeb 75% WP",
+      "dose": "2.5g per litre of water",
+      "precaution": "Monitor until dough stage."
+    }
+  },
+  "onion_purple_blotch": {
+    "crop": "प्याज (Onion)",
+    "crop_en": "Onion",
+    "name_hindi": "प्याज का बैंगनी धब्बा रोग (Purple Blotch)",
+    "name_en": "Onion Purple Blotch",
+    "pathogen": "अल्टरनेरिया पोरी (Alternaria porri)",
+    "pathogen_en": "Alternaria porri",
+    "symptoms": "पत्तियों पर छोटे जलसिक्त धब्बे जो बाद में बैंगनी-भूरे हो जाते हैं और पत्ती बीच से टूटकर गिर जाती है।",
+    "symptoms_en": "Small sunken water-soaked spots with a purplish center surrounded by yellow halo.",
+    "causes": "गर्म व नम मौसम (25-30°C और 80-90% आर्द्रता)।",
+    "causes_en": "Warm humid conditions (25-30°C with 80-90% RH).",
+    "immediate_action": "फसल में अत्यधिक पानी भराव न होने दें।",
+    "immediate_action_en": "Improve field drainage and avoid sprinkler irrigation late evening.",
+    "organic_ipm": "स्यूडोमोनास फ्लोरोसेंस 5 ग्राम/लीटर का प्रयोग करें।",
+    "organic_ipm_en": "Pseudomonas fluorescens @ 5g/L.",
+    "chemical_treatment": {
+      "name": "टेबुकोनाजोल 25.9% ईसी (Folicur) या मैंकोजेब",
+      "dose": "1.5 मिली प्रति लीटर पानी (स्टिकर जरूर मिलाएं)",
+      "precaution": "प्याज की पत्तियों पर मोमी परत होती है, अतः सिलिकॉन स्टिकर अवश्य मिलाएं।"
+    },
+    "chemical_treatment_en": {
+      "name": "Tebuconazole 25.9% EC or Mancozeb",
+      "dose": "1.5 ml per litre of water (with non-ionic sticker)",
+      "precaution": "Onion foliage is waxy; always add a silicone spreader/sticker for adhesion."
+    }
+  },
+  "grapes_downy_mildew": {
+    "crop": "अंगूर (Grapes)",
+    "crop_en": "Grapes",
+    "name_hindi": "अंगूर का डाउनी मिल्ड्यू / मृदुरोमिल आसिता (Downy Mildew)",
+    "name_en": "Grape Downy Mildew",
+    "pathogen": "प्लाज्मोपारा विटिकोला (Plasmopara viticola)",
+    "pathogen_en": "Plasmopara viticola",
+    "symptoms": "पत्तियों की ऊपरी सतह पर पीले तेल जैसे धब्बे (oil spots) और निचली सतह पर सफेद रुईदार फफूंद।",
+    "symptoms_en": "Yellow translucent oil-spots on upper leaf surface with white cottony downy growth underneath.",
+    "causes": "लगातार बारिश और रात का तापमान > 18°C।",
+    "causes_en": "Warm rainy spells with leaf wetness exceeding 2-3 hours.",
+    "immediate_action": "कैनोपी छंटाई करके धूप व हवा का प्रवेश बढ़ाएं।",
+    "immediate_action_en": "Canopy pruning to ensure maximum air and sunlight penetration.",
+    "organic_ipm": "बोर्डो मिश्रण 1% का सुरक्षात्मक छिड़काव करें।",
+    "organic_ipm_en": "Bordeaux mixture 1% protective spray.",
+    "chemical_treatment": {
+      "name": "डाइमेथोमॉर्फ 50% डब्ल्यूपी या साइमोक्सानिल + मैंकोजेब",
+      "dose": "1.5 ग्राम प्रति लीटर पानी",
+      "precaution": "बारिश से ठीक पहले सुरक्षात्मक स्प्रे सबसे प्रभावी रहता है।"
+    },
+    "chemical_treatment_en": {
+      "name": "Dimethomorph 50% WP or Cymoxanil + Mancozeb",
+      "dose": "1.5g per litre of water",
+      "precaution": "Protective pre-infection application is far superior to curative spray."
+    }
+  },
+  "healthy_leaf": {
+    "crop": "स्वस्थ पौधा (Healthy Plant)",
+    "crop_en": "Healthy Plant",
+    "name_hindi": "स्वस्थ पत्ती (Healthy Crop Foliage)",
+    "name_en": "Healthy Crop Foliage",
+    "pathogen": "कोई नहीं (None)",
+    "pathogen_en": "None",
+    "symptoms": "पत्ती हरी, चमकदार और किसी भी कीट या फफूंद के धब्बों से मुक्त है।",
+    "symptoms_en": "Foliage is green, turgid, and completely free of lesions or pest punctures.",
+    "causes": "उचित पोषण और अनुकूल मौसम।",
+    "causes_en": "Optimal nutrition and favorable agro-climatic conditions.",
+    "immediate_action": "वर्तमान प्रबंधन जारी रखें। नियमित निरीक्षण करते रहें।",
+    "immediate_action_en": "Continue balanced cultural practices and monitor scouting weekly.",
+    "organic_ipm": "सुरक्षात्मक रूप से 15 दिन में नीम तेल का छिड़काव जारी रख सकते हैं।",
+    "organic_ipm_en": "Prophylactic botanical neem oil sprays at 15-day intervals.",
+    "chemical_treatment": {
+      "name": "किसी रासायनिक दवा की आवश्यकता नहीं है",
+      "dose": "शून्य (0)",
+      "precaution": "स्वस्थ फसल पर अनावश्यक कीटनाशकों का प्रयोग न करें।"
+    },
+    "chemical_treatment_en": {
+      "name": "No chemical pesticide required",
+      "dose": "None",
+      "precaution": "Avoid unnecessary chemical interventions on healthy crop foliage."
+    }
+  }
+}

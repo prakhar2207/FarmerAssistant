@@ -1,180 +1,243 @@
-﻿# 🌾 KrishiSaathi (कृषि साथी)
-### Bilingual (Hindi + English) AI Agricultural Advisory & Agentic Farming Intelligence System
-**भारतीय किसानों के लिए आधुनिक एजेंटिक एआई एवं बहुभाषी कृषि निर्णय समर्थन प्रणाली**
+# 🌾 KrishiSaathi (कृषि साथी)
+### Multimodal AI Agricultural Advisory & Agentic Farming Intelligence System
+**भारतीय किसानों के लिए आधुनिक एजेंटिक एआई, कंप्यूटर विज़न एवं बहुभाषी कृषि निर्णय समर्थन प्रणाली**
+
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-green.svg)](https://fastapi.tiangolo.com/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.4%2B-red.svg)](https://pytorch.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests: 40/40 Passed](https://img.shields.io/badge/Tests-40%2F40%20Passed%20(100%25)-brightgreen.svg)]()
 
 ---
 
 ## 📖 Overview
 
-**KrishiSaathi** is an end-to-end, Hindi-first, agentic agricultural advisory platform tailored specifically for Indian farmers. It unifies cutting-edge research across conversational dialogue management, machine learning for crop recommendation, computer vision for plant disease diagnosis, soil report analytics, and real-time meteorological intelligence into a single, user-friendly farming assistant.
+**KrishiSaathi (कृषि साथी)** is an enterprise-grade, India-specific, Hindi-first and English multimodal agricultural advisory system. Designed specifically for Indian farmers and field agronomists, KrishiSaathi unifies **Conversational Agentic Graph Orchestration**, **PyTorch/YOLO Computer Vision foliar diagnostics**, **ICAR-grounded Retrieval-Augmented Generation (RAG)**, **Soil Health Card analytics**, and **Real-Time Weather Intelligence** into a clean, ChatGPT-style responsive user interface.
 
-Unlike traditional static chatbots that answer one-off questions blindly, KrishiSaathi implements an **Intent-Aware, Multi-Turn Agentic Pipeline** that:
-1. Progressively asks clarifying questions in Hindi when crucial details (crop variety, sowing time, soil condition) are missing.
-2. Integrates real-time weather and forecast from Open-Meteo to prevent hazardous spraying or fertilizer wastage before rains.
-3. Diagnoses crop leaf diseases using computer vision and provides CIBRC-safe chemical, biological (IPM), and organic remedies.
-4. Analyzes Soil Health Cards (pH, NPK, OC, micronutrients) and directs farmers to nearby government testing laboratories.
-5. Employs strict agricultural guardrails to block banned or hazardous agrochemicals (e.g., Endosulfan, Monocrotophos, Phorate).
-
----
-
-## 🔬 Research Foundations
-
-KrishiSaathi synthesizes findings and architectural patterns from four seminal research works:
-
-1. **Krishi Sathi (BharatGen / IIT Bombay - arXiv:2508.03719)**:
-   - *Multi-turn dialogue & intent-slot filling*: Dynamically detects missing slots and generates counter-questions in simple Hindi (e.g., *"आप किस मौसम में प्याज की रोपाई कर रहे हैं और कौन सी किस्म है?"*).
-   - *Context-enriched RAG*: Combines user slots with curated ICAR / KVK knowledge bases.
-
-2. **Farmer.Chat (Microsoft Research & Digital Green - arXiv:2409.08916)**:
-   - *Tested with 15,000+ farmers & 300,000+ queries*: Pests & Diseases (#1) and Soil & Fertilizer (#2) account for over 50% of real queries.
-   - *Simplicity & readability*: Translates technical kg/ha into practical farmer units (e.g., 50kg बोरी/कट्टा, 15-लीटर स्प्रेयर टंकी).
-   - *Clickable follow-up prompt chips*: Boosts farmer engagement and eliminates typing friction.
-   - *Strict banned chemicals screening*.
-
-3. **Complete 20-Step Pipeline Architecture**:
-   - Implements the complete pipeline: Multi-modal inputs $\to$ Vision analysis $\to$ Context builder $\to$ Auto-data weather layer $\to$ Clarification loop $\to$ Soil intelligence & labs $\to$ Data fusion $\to$ Query builder $\to$ RAG $\to$ Reasoning $\to$ Safe Hindi speech/text output.
-
-4. **AgriGPT-VL (Zhejiang University - arXiv:2510.04002)**:
-   - Visual feature grounding (chlorosis, necrotic spots, lesion patterns) coupled with multi-step agronomic deduction and weather constraints.
+Unlike generic chatbots that answer farming queries blindly, KrishiSaathi operates through an explicit **9-node State Machine / Graph Orchestrator** (`app/core/graph.py`) that:
+1. **Understands Natural Multimodal Inputs**: Hindi voice transcriptions, Devanagari text, Romanized Hinglish, English queries, foliar disease photos, and PDF/image Soil Health Cards.
+2. **Clarifies Ambiguous Inquiries**: When key agronomic slots (crop name, variety, plant age, symptoms) are missing, it asks gentle, actionable counter-questions instead of guessing.
+3. **Guarantees Scientific Safety**: Enforces strict CIBRC statutory bans on hazardous agrochemicals (e.g., Endosulfan, Monocrotophos, Phorate) and checks 48-hour rainfall probability before permitting foliar sprays or urea application.
+4. **Verifiable Government & ICAR Grounding**: Emits auditable citations citing Indian Council of Agricultural Research institutes (IIWBR, NRRI, IIHR, CPRI) and Ministry schemes (PM-KISAN, PMFBY, KCC).
+5. **Streams in Real-Time**: Streams responses via Server-Sent Events (SSE) with live progress badges, transparent agronomic reasoning thoughts, and clickable follow-up chips.
 
 ---
 
 ## 🏗️ System Architecture
 
 ```
-                       ┌────────────────────────────────────────┐
-                       │          Farmer User Interface         │
-                       │    (Hindi Voice, Text, Photos, Soil)   │
-                       └───────────────────┬────────────────────┘
-                                           │
-                                           ▼
-                       ┌────────────────────────────────────────┐
-                       │            FastAPI Gateway             │
-                       │   (/api/chat, /api/disease, /api/crop, │
-                       │    /api/soil, /api/weather, /api/schemes)│
-                       └───────────────────┬────────────────────┘
-                                           │
-                                           ▼
-                       ┌────────────────────────────────────────┐
-                       │        Agentic AI Orchestrator         │
-                       │  • Multi-turn Intent & Slot Detector   │
-                       │  • Counter-Question Clarification      │
-                       │  • Location & Weather Fusion           │
-                       └───────────────────┬────────────────────┘
-                                           │
-       ┌───────────────────┬───────────────┴───────────────┬───────────────────┐
-       ▼                   ▼                               ▼                   ▼
-┌───────────────┐   ┌───────────────┐               ┌───────────────┐   ┌───────────────┐
-│ Weather Tool  │   │ Disease Vision│               │ Soil Analyzer │   │ Crop Predictor│
-│ (Open-Meteo & │   │ (PyTorch Leaf │               │ (SHC + Govt   │   │ (RandomForest │
-│ Agri-Alerts)  │   │  Diagnostics) │               │  Lab Locator) │   │  22 Crops)    │
-└───────┬───────┘   └───────┬───────┘               └───────┬───────┘   └───────┬───────┘
-        │                   │                               │                   │
-        └───────────────────┼───────────────────────────────┴───────────────────┘
-                            ▼
-        ┌───────────────────────────────────────────────────────┐
-        │         Fertilizer & IPM Pest Advisory Engine         │
-        │  • INM Schedules (DAP, Urea, MOP in 50kg bags)        │
-        │  • Biological Controls & Jeevamrut / Neemastra        │
-        │  • Rain & Wind Spray Safety Constraints               │
-        └───────────────────────────┬───────────────────────────┘
-                                    ▼
-        ┌───────────────────────────────────────────────────────┐
-        │           Authoritative ICAR / KVK RAG Base           │
-        │  • Verified Packages of Practices & Schemes (PM-KISAN)│
-        │  • Source Citations & Transparent Grounding           │
-        └───────────────────────────┬───────────────────────────┘
-                                    ▼
-        ┌───────────────────────────────────────────────────────┐
-        │             Safety, CIBRC & Trust Filter              │
-        │  • Redaction of banned chemicals (Endosulfan, etc.)   │
-        │  • KVK Escalation & Farmer Disclaimers                │
-        └───────────────────────────┬───────────────────────────┘
-                                    ▼
-        ┌───────────────────────────────────────────────────────┐
-        │          Localized Multi-Modal Hindi Output           │
-        │  • Conversational Devanagari Hindi Text               │
-        │  • Web Speech Audio Playback (TTS)                    │
-        │  • Clickable Follow-Up Suggestions                    │
-        └───────────────────────────────────────────────────────┘
+                                  ┌────────────────────────────────────────────────────────┐
+                                  │               Farmer Multi-Modal Interface             │
+                                  │   (Devanagari Hindi / English Voice, Photos, Reports)  │
+                                  └───────────────────────────┬────────────────────────────┘
+                                                              │
+                                                              ▼
+                                  ┌────────────────────────────────────────────────────────┐
+                                  │                    FastAPI Gateway                     │
+                                  │     • SSE Stream: POST /api/chat/stream                │
+                                  │     • REST Endpoints: /chat, /disease, /soil, /weather │
+                                  │     • Magic-Byte File Validation & Rate Limiter        │
+                                  └───────────────────────────┬────────────────────────────┘
+                                                              │
+                                                              ▼
+                                  ┌────────────────────────────────────────────────────────┐
+                                  │       Explicit Agent State Graph (app/core/graph.py)   │
+                                  │  [Node 1: Intent & Slot Filling]                       │
+                                  │        │                                               │
+                                  │  [Node 2: Out-of-Domain Guard]                         │
+                                  │        │                                               │
+                                  │  [Node 3: Banned Chemical / Safety Guard]              │
+                                  │        │                                               │
+                                  │  [Node 4: Ambiguity Clarification]                     │
+                                  │        │                                               │
+                                  │  [Node 5: Agro-Climatic Context (Weather/Soil)]        │
+                                  │        │                                               │
+                                  │  [Node 6: Tool Execution Engine] ─────────────────┐    │
+                                  │        │                                          │    │
+                                  │  [Node 7: ICAR RAG Grounding Engine]              │    │
+                                  │        │                                          │    │
+                                  │  [Node 8: Weather / Rain Safety Post-Audit]       │    │
+                                  │        │                                          │    │
+                                  │  [Node 9: SSE Stream & Memory Persistence]        │    │
+                                  └───────────────────────────┬───────────────────────┘    │
+                                                              │                            │
+                     ┌────────────────────────────────────────┴─────────────────────┐      │
+                     ▼                                                              ▼      │
+    ┌──────────────────────────────────┐                           ┌─────────────────────┐ │
+    │    Relational DB (SQLAlchemy)    │                           │    External APIs    │ │
+    │  • SQLite: krishi_saathi.db      │                           │  • Open-Meteo Weather│ │
+    │  • Conversations & Chat History  │                           │  • GPS Geocoding    │ │
+    │  • Soil Reports & Disease Logs   │                           │  • ICAR Data Store  │ │
+    └──────────────────────────────────┘                           └─────────────────────┘ │
+                                                                                           │
+    ┌──────────────────────────────────────────────────────────────────────────────────────┘
+    │ Specialized Agricultural Tools:
+    ├── 📸 YOLO Foliar Vision: 3-tier confidence leaf diagnostics with bounding box coordinates
+    ├── 🧪 Soil Analyzer: ICAR-grounded health index (0-100), deficiency identification & lab finder
+    ├── 🌱 Crop Recommender: RandomForest ML model with explainable feature importance
+    ├── 💊 Fertilizer Engine: Stage-wise INM schedule in practical farmer units (50kg bags)
+    ├── 🏛️ Scheme Catalog: Direct benefit schemes eligibility checker (PM-KISAN, KCC, PMFBY)
+    └── 🌦️ Weather Intelligence: Agrometeorological spray/irrigation/frost risk advisories
 ```
 
 ---
 
-## 🚀 Quick Start Guide
+## 🔬 Scientific Foundations & Research Compliance
 
-### Prerequisites
-- Python 3.10+ (tested on Python 3.14 with CUDA acceleration)
-- Modern web browser (Chrome, Edge, Firefox, Safari)
+KrishiSaathi synthesizes validated architectures from peer-reviewed agricultural AI research:
 
-### Installation
+1. **Krishi Sathi (BharatGen / IIT Bombay - arXiv:2508.03719)**:
+   - Dynamic intent slot filling and missing-slot clarification dialogues in colloquial Hindi.
+   - Grounded RAG incorporating domain-specific agricultural extensions.
+2. **Farmer.Chat (Microsoft Research & Digital Green - arXiv:2409.08916)**:
+   - Field-tested against 15,000+ real farmer interactions: 50%+ queries focus on crop diseases and nutrient scheduling.
+   - Readability at the grassroots level: outputs dosages in practical units (50 kg बोरी, 15 L नैपसैक स्प्रेयर टंकी).
+   - Zero hallucinations on banned pesticides.
+3. **AgriGPT-VL (Zhejiang University - arXiv:2510.04002)**:
+   - Multimodal foliar lesion segmentation (chlorosis halos, necrotic spots) linked directly to pathogen life-cycles.
+
+---
+
+## ⚡ Quick Start
+
+### 1. Prerequisites
+- Python 3.10+ (tested up to Python 3.14 on Windows and Linux)
+- Modern web browser with Web Speech API support (Google Chrome, Microsoft Edge)
+
+### 2. Installation
 ```bash
-# 1. Activate environment
-.\venv\Scripts\activate
+# Clone the repository
+git clone https://github.com/prakhar2207/FarmerAssistant.git
+cd FarmerAssistant
 
-# 2. Install dependencies
+# Create and activate virtual environment
+python -m venv venv
+# On Windows:
+.\venv\Scripts\activate
+# On Linux/macOS:
+source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### Running the Application
+### 3. Initialize Database & Run
 ```bash
-# Start the FastAPI web application
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+# Initialize SQLite relational database schema
+python main.py init-db
+
+# Launch application server
+python main.py run --host 0.0.0.0 --port 8000 --reload
 ```
-Open your browser and navigate to: **`http://localhost:8000`**
+
+Access the application in your browser at: **`http://localhost:8000`**
 
 ---
 
-## 🧪 Running Automated Tests
+## 🐳 Docker Deployment
 
-KrishiSaathi comes with a full automated test suite verifying all 20 pipeline steps:
+Run KrishiSaathi in an isolated, production-ready container:
 
 ```bash
-.\venv\Scripts\pytest.exe -v tests/
-```
+# Build and start via Docker Compose
+docker-compose up -d --build
 
-### Test Coverage:
-* `tests/test_weather.py`: Location resolution, live Open-Meteo weather fetch, and agricultural advisories (spray safety, frost warning, fungal humidity alert).
-* `tests/test_soil.py`: Acidic/alkaline pH interpretation, nutrient deficiency detection, soil amendments, and government lab locator.
-* `tests/test_crop_recommender.py`: ML Random Forest model inference, seasonal compatibility, and top-3 crop suggestions.
-* `tests/test_disease.py`: Leaf image preprocessing, foliar symptom classification, and weather spray alert verification.
-* `tests/test_safety.py`: CIBRC banned chemical detection and rain spray constraints.
-* `tests/test_orchestrator.py`: Multi-turn intent detection, missing slot clarification flow, and end-to-end responses.
-* `tests/test_api.py`: FastAPI REST endpoints integration testing.
+# Inspect container health
+docker ps -f name=krishisaathi_app
+
+# Access API healthcheck
+curl http://localhost:8000/api/health
+```
 
 ---
 
-## 🌟 Key Features & Functional Modules
+## 🧪 Comprehensive Test Suite & AI Benchmark
 
-### 1. 💬 कृषि मित्र चैट (Conversational Assistant)
-- **Hindi-First Interaction**: Natural communication in Devanagari Hindi and Hinglish.
-- **Voice In & Voice Out**: Integrated Web Speech API microphone input and Text-To-Speech (TTS) audio narration.
-- **Transparent Agent Reasoning**: Displays real-time thought steps showing farmer profile retrieval, weather checks, tool execution, and safety validations.
-- **Engagement Chips**: Clickable follow-up prompt suggestions that guide the farmer naturally.
+KrishiSaathi features a comprehensive automated test suite with **40 test cases** achieving a **100% pass rate**.
 
-### 2. 📸 फसल रोग जांच (Crop Disease Detection)
-- Upload leaf photos to detect diseases across Tomato, Potato, Wheat, Rice, Cotton, Maize, Onion, and Grapes.
-- Provides visual symptoms, causal pathogens, cultural methods, biological IPM solutions, and safe chemical treatments with precise dilution ratios.
-- **Weather Spray Alert**: Automatically warns against spraying if rain is forecast within 24–48 hours.
+### Running Tests
+```bash
+# Run full test suite
+pytest -v tests/
 
-### 3. 🧪 मृदा स्वास्थ्य कार्ड (Soil Health Analysis & Lab Locator)
-- Accepts pH, EC, Organic Carbon, N, P, K, and micronutrients.
-- Computes overall Soil Health Score (out of 100) and identifies specific deficiencies.
-- Recommends corrective amendments (चूना for acidic soil, जिप्सम for alkaline soil, हरी खाद/जीवामृत for low organic carbon).
-- Provides a directory of nearby Government Soil Testing Labs and KVKs with address, phone, and fee details.
+# Run AI Evaluation Benchmark (28 realistic farmer scenarios)
+python main.py eval
+```
 
-### 4. 🌱 फसल चयन सलाहकार (Crop Recommendation Engine)
-- Trained on 2,200+ samples covering 22 major Indian crops.
-- Evaluates N, P, K, soil pH, rainfall, temperature, and humidity.
-- One-click button to sync temperature and humidity directly from the live weather service!
+### Test Suite Breakdown:
+| Test File | Description | Status |
+| :--- | :--- | :---: |
+| `tests/test_scenarios_1_to_12.py` | 12 end-to-end multi-turn & multimodal farmer scenarios | ✅ 12/12 Passed |
+| `tests/test_eval_benchmark.py` | 28 benchmark scenarios from `eval_dataset.json` | ✅ 2/2 Passed |
+| `tests/test_security_and_adversarial.py` | Magic bytes, rate limiting, prompt injection & banned chemicals | ✅ 4/4 Passed |
+| `tests/test_api.py` | FastAPI REST & SSE endpoints integration | ✅ 6/6 Passed |
+| `tests/test_orchestrator.py` | Graph state transitions & slot clarification in Hindi/English | ✅ 5/5 Passed |
+| `tests/test_soil.py` | Acidic/alkaline analysis, amendment dosage & KVK lab finder | ✅ 3/3 Passed |
+| `tests/test_disease.py` | Synthetic leaf foliar lesion inference & spray weather warning | ✅ 1/1 Passed |
+| `tests/test_crop_recommender.py` | RandomForest ML crop predictions & feature importance | ✅ 2/2 Passed |
+| `tests/test_weather.py` | Open-Meteo caching, agro-rules & district geocoding | ✅ 3/3 Passed |
+| `tests/test_safety.py` | CIBRC banned chemical detection & rain probability safety | ✅ 2/2 Passed |
+| **Total** | **All 40 Automated Unit, Scenario & Security Tests** | **✅ 40/40 (100%)** |
 
-### 5. 🌦️ मौसम व कृषि अलर्ट (Weather Intelligence)
-- Real-time weather and 5-day forecasts for any district or GPS coordinates in India.
-- Dynamic alerts for spray timing, irrigation scheduling, fungal disease risks, and frost mitigation.
+---
 
-### 6. 🏛️ सरकारी योजनाएं (Government Schemes Portal)
-- Comprehensive catalog of farmer welfare schemes: PM-KISAN, PMFBY (फसल बीमा), Kisan Credit Card (KCC), Soil Health Card, PM-KUSUM (सोलर पंप).
-- Complete details on eligibility, benefits, application processes, and toll-free helpline numbers.
+## 📡 API Reference
 
-### 7. 👤 किसान प्रोफाइल (Farmer Profile Persistence)
-- Persistent SQLite storage remembering farmer name, village, district, state, land acreage, and primary crops for personalized recommendations.
+### Core Endpoints
+
+#### 1. `POST /api/chat/stream` (Server-Sent Events)
+Streams response chunks, real-time status badges, and thought steps to the frontend.
+```json
+// Request
+{
+  "message": "गेहूं में पहली खाद कब और कितनी मात्रा में डालनी चाहिए?",
+  "session_id": "session_farmer_01",
+  "farmer_id": "farmer_lucknow_01",
+  "lang": "hi"
+}
+```
+
+#### 2. `POST /api/disease/analyze` (Foliar Computer Vision)
+Uploads leaf photography (`multipart/form-data`) with optional `crop_hint` and `rain_forecast`.
+Returns:
+- `is_leaf` (bool): Rejection flag if non-leaf image uploaded.
+- `disease_name_hindi` & `disease_name_en`.
+- `confidence_score` (0-100) and `confidence_tier` (`high`, `medium`, `low`).
+- `bounding_boxes`: `[{x1, y1, x2, y2, label, confidence}]`.
+- `immediate_cultural_action`, `organic_ipm_remedy`, and `chemical_solution`.
+- `weather_spray_advisory`: Rain-delayed warning if rain expected in 48h.
+
+#### 3. `POST /api/soil/analyze` (Soil Intelligence)
+Takes soil metrics (`ph`, `ec`, `oc`, `n`, `p`, `k`, `zn`, `fe`, `s`, `state`, `district`).
+Returns:
+- `health_score` (0-100) with transparent score breakdown.
+- `deficiencies` & `excesses` with agronomic explanations.
+- `amendments`: Specific doses of lime (चूना), gypsum (जिप्सम), or organic FYM.
+- `nearby_labs`: Geo-located ICAR / KVK government soil testing laboratories.
+
+#### 4. `POST /api/crop/recommend` (Crop Recommender)
+Accepts soil conditions and climatic parameters, returning top 3 suitable crops with seasonal risk assessments and rationale.
+
+#### 5. `GET /api/schemes` (Government Schemes)
+Searches and filters government agricultural welfare schemes (PM-KISAN, PMFBY, KCC, PM-KUSUM) based on state and landholding size.
+
+#### 6. `GET /api/health` and `GET /api/readiness`
+Provides container health status, hardware acceleration device (CUDA/CPU), and database connectivity status.
+
+---
+
+## 🛡️ Agricultural Safety & CIBRC Compliance
+
+KrishiSaathi enforces non-negotiable safety guardrails:
+* **Statutory Chemical Bans**: Refuses and redirects banned organophosphates and hazardous chemicals (Monocrotophos, Endosulfan, Phorate, Methyl Parathion, Paraquat Dichloride, DDT, Lindane) to safe CIBRC-approved alternatives and bio-pesticides.
+* **Weather-Triggered Spray Interception**: Warns farmers against foliar pesticide/fungicide application when rain probability $\ge 30\%$ or wind speed $> 20$ km/h.
+* **Nitrogen Leaching Prevention**: Halts urea top-dressing during heavy rain forecasts to eliminate environmental pollution and monetary waste.
+* **KVK Escalation Protocols**: Whenever leaf damage exceeds 30% or confidence is low, provides toll-free Kisan Call Centre helpline (**1800-180-1551**) and local KVK contacts.
+
+---
+
+## 🤝 Contributing & License
+
+Contributions are welcome! Please run `pytest` before submitting pull requests.
+
+Released under the [MIT License](LICENSE).

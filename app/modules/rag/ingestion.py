@@ -94,3 +94,6 @@ def get_ingested_knowledge() -> List[Dict[str, Any]]:
             chunks.append(ext_doc)
 
     return chunks
+
+ingest_icar_knowledge = get_ingested_knowledge
+

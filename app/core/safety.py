@@ -34,11 +34,28 @@ SAFE_ALTERNATIVES = {
     }
 }
 
+BANNED_CHEMICAL_SYNONYMS = {
+    "monocrotophos": ["monocrotophos", "मोनोक्रोटोफॉस", "मोनोक्रोटोफास"],
+    "endosulfan": ["endosulfan", "एंडोसल्फान", "इंडोसल्फान"],
+    "phorate": ["phorate", "फोरेट"],
+    "paraquat": ["paraquat", "पैराक्वॉट", "पैराक्वाट", "paraquat dichloride"],
+    "ddt": ["ddt", "डीडीटी"],
+    "lindane": ["lindane", "लिंडेन"],
+    "aldrin": ["aldrin", "एल्ड्रिन"],
+    "dieldrin": ["dieldrin", "डायल्ड्रिन"],
+    "chlordane": ["chlordane", "क्लोरडेन"],
+    "heptachlor": ["heptachlor", "हेप्टाक्लोर"],
+    "methyl parathion": ["methyl parathion", "मिथाइल पैराथियान"],
+    "phosphamidon": ["phosphamidon", "फॉस्फामिडॉन"],
+    "diazinon": ["diazinon", "डायजिनॉन"],
+    "captan": ["captan", "कैप्टान"]
+}
+
 def check_query_for_banned_chemicals(query: str, lang: str = "hi") -> Optional[Dict[str, Any]]:
-    """Screens the farmer's question directly for prohibited agrochemicals."""
+    """Screens the farmer's question directly for prohibited agrochemicals in Hindi/English."""
     q_lower = query.lower()
-    for chemical in BANNED_CHEMICALS:
-        if chemical in q_lower:
+    for chemical, synonyms in BANNED_CHEMICAL_SYNONYMS.items():
+        if any(syn in q_lower for syn in synonyms):
             alt_info = SAFE_ALTERNATIVES.get(chemical, {
                 "reason_hi": f"{chemical.title()} भारत सरकार (CIBRC) द्वारा प्रतिबंधित रसायन है।",
                 "reason_en": f"{chemical.title()} is a prohibited agrochemical under CIBRC, Government of India.",
@@ -83,11 +100,12 @@ def validate_agricultural_safety(
     
     # 1. Screen against Banned Pesticides in India
     flagged_banned = []
-    for chemical in BANNED_CHEMICALS:
-        if chemical in text_lower:
+    for chemical, synonyms in BANNED_CHEMICAL_SYNONYMS.items():
+        if any(syn in text_lower for syn in synonyms):
             flagged_banned.append(chemical)
 
     cleaned_text = response_text
+
     safety_warnings = []
     
     if flagged_banned:

@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  krishisaathi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: krishisaathi_app
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=production
+      - PORT=8000
+      - HOST=0.0.0.0
+      - DATABASE_URL=sqlite:///./data/krishi_saathi.db
+      - ALLOWED_ORIGINS=*
+      - RATE_LIMIT_PER_MINUTE=120
+      - OPEN_METEO_URL=https://api.open-meteo.com/v1/forecast
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
