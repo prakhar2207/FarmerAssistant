@@ -1,4 +1,4 @@
-﻿import re
+import re
 from typing import Dict, Any, List
 
 KNOWN_CROPS = {
@@ -15,9 +15,24 @@ KNOWN_CROPS = {
     "watermelon": "watermelon", "pulses": "pulses"
 }
 
+OUT_OF_DOMAIN_KEYWORDS = [
+    "cricket", "match", "ipl", "score", "cinema", "movie", "film", "actor", "actress",
+    "bollywood", "hollywood", "politics", "election", "vote", "modi", "rahul",
+    "party", "bitcoin", "crypto", "stock market", "shares", "joke", "song", "dance",
+    "cricketer", "football", "hockey", "tennis",
+    "क्रिकेट", "मैच", "सिनेमा", "फिल्म", "राजनीति", "चुनाव", "वोट", "शेयर", "मजाक", "गाना"
+]
+
+AGRI_KEYWORDS = [
+    "फसल", "खेती", "किसान", "बीज", "खाद", "उर्वरक", "मिट्टी", "मृदा", "रोग", "कीट", "स्प्रे",
+    "दवा", "छिड़काव", "सिंचाई", "मौसम", "योजना", "सब्सिडी", "पेड़", "पौधे", "पत्ती",
+    "crop", "farm", "farming", "farmer", "seed", "fertilizer", "soil", "disease", "pest",
+    "spray", "irrigation", "weather", "scheme", "subsidy", "plant", "leaf", "leaves"
+]
+
 def detect_language(text: str) -> str:
     """Detect if text is primarily Hindi (Devanagari) or English."""
-    devanagari_count = len(re.findall(r'[\u0900-\u097F]', text))
+    devanagari_count = len(re.findall(r'[ऀ-ॿ]', text))
     latin_count = len(re.findall(r'[a-zA-Z]', text))
     return "hi" if devanagari_count >= latin_count else "en"
 
@@ -25,6 +40,19 @@ def detect_intent_and_slots(query: str, history: List[Dict[str, str]] = None, re
     q = query.lower()
     detected_lang = requested_lang if requested_lang in ["hi", "en"] else detect_language(query)
     
+    # 0. Out of Domain Check
+    has_agri = any(ak in q for ak in AGRI_KEYWORDS) or any(ck in q for ck in KNOWN_CROPS.keys())
+    has_ood = any(ood in q for ood in OUT_OF_DOMAIN_KEYWORDS)
+    if has_ood and not has_agri:
+        return {
+            "intent": "OUT_OF_DOMAIN",
+            "crop": None,
+            "language": detected_lang,
+            "missing_slots": [],
+            "needs_clarification": False,
+            "clarification_question": None
+        }
+
     # 1. Detect Crop Slot
     detected_crop = None
     for k_crop, en_crop in KNOWN_CROPS.items():
@@ -45,43 +73,40 @@ def detect_intent_and_slots(query: str, history: List[Dict[str, str]] = None, re
     # 2. Intent Classification
     intent = "GENERAL_AGRI"
     
-    # Disease Diagnosis terms
     disease_terms = [
         "रोग", "बीमारी", "धब्बा", "झुलसा", "रतुआ", "पीला", "पीले", "सूख", "सड़न", "फफूंद", "सफेद चूर्ण",
         "disease", "spots", "spot", "blight", "rust", "yellow", "yellowing", "curl", "wilting", "rot", "mildew", "fungus"
     ]
-    # Pest Control terms
     pest_terms = [
-        "कीड़ा", "कीट", "इल्ली", "माहू", "चेपा", "सुंडी", "मक्खी",
+        "कीड़ा", "कीट", "इल्ली", "माहू", "चेपा", "सुंडी", "मक्खी", "दवा",
         "pest", "worm", "aphid", "aphids", "insect", "caterpillar", "borer", "whitefly", "armyworm"
     ]
-    # Soil Analysis terms
     soil_terms = [
         "मिट्टी", "मृदा", "पीएच", "ph", "नाइट्रोजन", "फॉस्फोरस", "पोटाश", "कार्ड", "जांच",
         "soil", "health card", "soil test", "soil analysis", "soil report", "organic carbon"
     ]
-    # Fertilizer terms
     fertilizer_terms = [
-        "खाद", "उर्वरक", "यूरिया", "डीएपी", "dap", "urea", "पोटाश", "जीवामृत", "स्प्रे",
+        "खाद", "उर्वरक", "यूरिया", "डीएपी", "dap", "urea", "पोटाश", "जीवामृत",
         "fertilizer", "fertiliser", "manure", "dosage", "npk", "nutrition"
     ]
-    # Crop Recommendation terms
     crop_rec_terms = [
         "कौन सी फसल", "क्या बोएं", "फसल चयन", "पैदावार", "फसल लगाएं",
         "crop recommend", "suitable crop", "which crop", "what to grow", "best crop", "crop selection"
     ]
-    # Weather terms
     weather_terms = [
-        "मौसम", "बारिश", "तापमान", "हवा", "पाला", "कोहरा",
-        "weather", "rain", "temperature", "forecast", "humidity", "rainfall", "frost"
+        "मौसम", "बारिश", "तापमान", "हवा", "पाला", "कोहरा", "छिड़काव कर सकते", "स्प्रे कर सकते",
+        "weather", "rain", "temperature", "forecast", "humidity", "rainfall", "frost", "can i spray"
     ]
-    # Schemes terms
     scheme_terms = [
         "योजना", "सब्सिडी", "सम्मान निधि", "बीमा", "kcc", "पंप",
         "scheme", "subsidy", "pm kisan", "insurance", "pmfby", "credit card", "kusum"
     ]
 
-    if any(term in q for term in disease_terms):
+    if any(term in q for term in weather_terms):
+        intent = "WEATHER_FORECAST"
+    elif any(term in q for term in scheme_terms):
+        intent = "GOVT_SCHEME"
+    elif any(term in q for term in disease_terms):
         intent = "DISEASE_DIAGNOSIS"
     elif any(term in q for term in pest_terms):
         intent = "PEST_CONTROL"
@@ -91,10 +116,6 @@ def detect_intent_and_slots(query: str, history: List[Dict[str, str]] = None, re
         intent = "FERTILIZER_ADVISORY"
     elif any(term in q for term in crop_rec_terms):
         intent = "CROP_RECOMMENDATION"
-    elif any(term in q for term in weather_terms):
-        intent = "WEATHER_FORECAST"
-    elif any(term in q for term in scheme_terms):
-        intent = "GOVT_SCHEME"
 
     # 3. Missing Slot & Clarification Detection
     missing_slots = []

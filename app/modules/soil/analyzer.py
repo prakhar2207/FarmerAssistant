@@ -1,4 +1,4 @@
-﻿from typing import Dict, Any, List
+from typing import Dict, Any, List
 from app.modules.soil.soil_types import estimate_soil_type
 
 def analyze_soil_metrics(
@@ -37,12 +37,12 @@ def analyze_soil_metrics(
             'importance': 'उच्च',
             'importance_en': 'High'
         })
-    elif ph > 8.2:
+    elif ph >= 7.8:
         ph_status = 'क्षारीय (Alkaline / Saline)'
         ph_status_en = 'Alkaline / Saline'
         health_score -= 20
         excesses.append('मिट्टी क्षारीय है, सोडियम की मात्रा अधिक हो सकती है।')
-        excesses_en.append('Soil is alkaline (pH > 8.2); excess sodium may cause dispersion and poor drainage.')
+        excesses_en.append('Soil is alkaline (pH >= 7.8); excess sodium may cause dispersion and poor drainage.')
         amendments.append({
             'action': 'जिप्सम (Gypsum) प्रयोग',
             'action_en': 'Gypsum Amendment',

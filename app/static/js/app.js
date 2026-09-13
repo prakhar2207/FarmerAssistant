@@ -3,6 +3,7 @@ let currentSessionId = "session_" + Math.random().toString(36).substring(2, 9);
 let currentFarmerId = "default_farmer";
 let currentLang = "hi";
 let liveWeatherCache = null;
+let attachedChatFile = null;
 
 const I18N = {
   hi: {
@@ -373,11 +374,42 @@ function speakText(text) {
 function setupChatHandlers() {
   const sendBtn = document.getElementById("send-btn");
   const chatInput = document.getElementById("chat-input");
+  const attachBtn = document.getElementById("attach-btn");
+  const chatFileInput = document.getElementById("chat-file-input");
+  const previewContainer = document.getElementById("chat-attachment-preview");
+  const previewImg = document.getElementById("chat-preview-img");
+  const previewName = document.getElementById("chat-preview-name");
+  const previewClear = document.getElementById("chat-preview-clear");
+
+  if (attachBtn && chatFileInput) {
+    attachBtn.addEventListener("click", () => {
+      chatFileInput.click();
+    });
+
+    chatFileInput.addEventListener("change", (e) => {
+      if (e.target.files && e.target.files[0]) {
+        attachedChatFile = e.target.files[0];
+        previewName.innerText = attachedChatFile.name;
+        const reader = new FileReader();
+        reader.onload = (re) => {
+          previewImg.src = re.target.result;
+          previewContainer.style.display = "flex";
+        };
+        reader.readAsDataURL(attachedChatFile);
+      }
+    });
+
+    previewClear.addEventListener("click", () => {
+      attachedChatFile = null;
+      chatFileInput.value = "";
+      previewContainer.style.display = "none";
+    });
+  }
 
   sendBtn.addEventListener("click", () => {
     const text = chatInput.value.trim();
-    if (text) {
-      sendMessage(text);
+    if (text || attachedChatFile) {
+      sendMessage(text || (currentLang === "hi" ? "कृपया इस पत्ती की जांच करें।" : "Please analyze this plant leaf."));
       chatInput.value = "";
     }
   });
@@ -385,8 +417,8 @@ function setupChatHandlers() {
   chatInput.addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
       const text = chatInput.value.trim();
-      if (text) {
-        sendMessage(text);
+      if (text || attachedChatFile) {
+        sendMessage(text || (currentLang === "hi" ? "कृपया इस पत्ती की जांच करें।" : "Please analyze this plant leaf."));
         chatInput.value = "";
       }
     }
@@ -396,10 +428,23 @@ function setupChatHandlers() {
 async function sendMessage(text) {
   const messagesArea = document.getElementById("chat-messages");
   const userLabel = currentLang === "hi" ? "आप" : "You";
+  const previewContainer = document.getElementById("chat-attachment-preview");
+  const chatFileInput = document.getElementById("chat-file-input");
   
   const userDiv = document.createElement("div");
   userDiv.className = "message user";
-  userDiv.innerHTML = `<strong>${userLabel}:</strong> ${escapeHtml(text)}`;
+
+  let imgTag = "";
+  let sendingFile = attachedChatFile;
+  if (sendingFile) {
+    const tempUrl = URL.createObjectURL(sendingFile);
+    imgTag = `<div style="margin-bottom: 6px;"><img src="${tempUrl}" style="max-width: 140px; max-height: 100px; border-radius: 6px; border: 1px solid #81c784; object-fit: cover;"></div>`;
+    attachedChatFile = null;
+    if (chatFileInput) chatFileInput.value = "";
+    if (previewContainer) previewContainer.style.display = "none";
+  }
+
+  userDiv.innerHTML = `${imgTag}<strong>${userLabel}:</strong> ${escapeHtml(text)}`;
   messagesArea.appendChild(userDiv);
   messagesArea.scrollTop = messagesArea.scrollHeight;
 
@@ -407,39 +452,78 @@ async function sendMessage(text) {
   loadingDiv.className = "message agent";
   loadingDiv.id = "agent-loading";
   const loadingText = currentLang === "hi" 
-    ? "कृषि साथी सोच रहा है... (मौसम व ज्ञानकोश जांच जारी)"
-    : "KrishiSaathi is analyzing... (Checking weather & knowledge base)";
+    ? "🌾 कृषि साथी सोच रहा है... (मौसम, YOLO विज़न व ICAR ज्ञानकोश जांच जारी)"
+    : "🌾 KrishiSaathi is analyzing... (Checking weather, YOLO vision & ICAR guidelines)";
   loadingDiv.innerHTML = `<em>${loadingText}</em>`;
   messagesArea.appendChild(loadingDiv);
   messagesArea.scrollTop = messagesArea.scrollHeight;
 
   try {
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: text,
-        session_id: currentSessionId,
-        farmer_id: currentFarmerId,
-        lang: currentLang
-      })
-    });
+    let res;
+    if (sendingFile) {
+      const formData = new FormData();
+      formData.append("message", text);
+      formData.append("file", sendingFile);
+      formData.append("session_id", currentSessionId);
+      formData.append("farmer_id", currentFarmerId);
+      formData.append("lang", currentLang);
+
+      res = await fetch("/api/chat/multimodal", {
+        method: "POST",
+        body: formData
+      });
+    } else {
+      res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: text,
+          session_id: currentSessionId,
+          farmer_id: currentFarmerId,
+          lang: currentLang
+        })
+      });
+    }
+
     const data = await res.json();
     loadingDiv.remove();
 
     const agentDiv = document.createElement("div");
     agentDiv.className = "message agent";
 
-    let thoughtHtml = "";
-    if (data.thought_steps && data.thought_steps.length > 0) {
-      const thoughtTitle = currentLang === "hi"
-        ? "🧠 एजेंट विचार प्रक्रिया (Agent Reasoning & Tools)"
-        : "🧠 Agent Reasoning Steps & Tool Invocations";
-      thoughtHtml = `
-        <details class="thought-steps">
-          <summary>${thoughtTitle}</summary>
-          <ul>${data.thought_steps.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul>
-        </details>
+    // Reassuring status badges (Replacing raw CoT)
+    let statusHtml = "";
+    if (data.status_badges && data.status_badges.length > 0) {
+      statusHtml = `
+        <div class="status-badges-bar">
+          ${data.status_badges.map(b => `<span class="status-badge-pill">${escapeHtml(currentLang === "hi" ? b.label_hi : b.label_en)}</span>`).join(" ")}
+        </div>
+      `;
+    }
+
+    // Vision detection badge if returned
+    let visionBadgeHtml = "";
+    if (data.vision && data.vision.success) {
+      const v = data.vision;
+      visionBadgeHtml = `
+        <div style="background: #e8f5e9; border: 1px solid #81c784; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.85rem;">
+          🍃 <strong>${escapeHtml(currentLang === 'hi' ? v.disease_name_hindi : v.disease_name_en)}</strong> (${escapeHtml(currentLang === 'hi' ? v.crop : v.crop_en)})
+          • ${currentLang === 'hi' ? 'विश्वसनीयता' : 'Confidence'}: <strong>${v.confidence_score}%</strong>
+          ${v.severity_percentage ? `• ${currentLang === 'hi' ? 'संक्रमण' : 'Foliar Damage'}: <strong>${v.severity_percentage}%</strong>` : ''}
+        </div>
+      `;
+    }
+
+    // Scientific Citations
+    let citationsHtml = "";
+    if (data.citations && data.citations.length > 0) {
+      citationsHtml = `
+        <div class="citations-container">
+          <span style="font-size: 0.78rem; font-weight: 600; color: #2e7d32; display: block; width: 100%; margin-bottom: 2px;">
+            ${currentLang === 'hi' ? '📚 प्रामाणिक कृषि संदर्भ (ICAR / KVK / CIBRC):' : '📚 Verified Scientific Grounding:'}
+          </span>
+          ${data.citations.map(c => `<span class="citation-chip">${escapeHtml(c.citation_badge || c.source)}</span>`).join(" ")}
+        </div>
       `;
     }
 
@@ -451,8 +535,10 @@ async function sendMessage(text) {
     const speakBtnLabel = currentLang === "hi" ? "🔊 बोलकर सुनाएं" : "🔊 Read Aloud";
 
     agentDiv.innerHTML = `
-      ${thoughtHtml}
+      ${statusHtml}
+      ${visionBadgeHtml}
       <div>${formattedResp}</div>
+      ${citationsHtml}
       <div class="message-actions">
         <button class="tts-btn" onclick="speakText(\`${escapeJsString(data.response)}\`)">${speakBtnLabel}</button>
       </div>
@@ -586,7 +672,10 @@ async function processDiseaseFile(file) {
         </div>
       `;
     } else {
-      resultArea.innerHTML = `<div style="color: red;">${data.error}</div>`;
+      const errMsg = data.rejection_reason 
+        ? `<strong>${escapeHtml(data.rejection_reason)}</strong><br><br>${escapeHtml(data.guidance || '')}<br><br>📞 ${escapeHtml(data.helpline || '')}` 
+        : escapeHtml(data.error || "Diagnosis failed");
+      resultArea.innerHTML = `<div style="background: #ffebee; color: #c62828; padding: 14px; border-radius: 8px; border-left: 4px solid #d32f2f;">${errMsg}</div>`;
     }
   } catch (err) {
     resultArea.innerHTML = `<div style="color: red;">Error processing diagnosis. / विश्लेषण असफल रहा।</div>`;

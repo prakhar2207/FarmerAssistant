@@ -1,6 +1,7 @@
-﻿from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional
+from app.core.context import AgriculturalContext, VisionContext, WeatherContext, SoilContext, RAGCitation, StatusBadge, BoundingBox
 from app.core.intent import detect_intent_and_slots
-from app.core.safety import validate_agricultural_safety
+from app.core.safety import validate_agricultural_safety, check_query_for_banned_chemicals
 from app.core.memory import get_farmer_profile, get_recent_chat_history, save_chat_turn
 from app.modules.weather.service import get_weather_data, resolve_location
 from app.modules.weather.agri_rules import generate_agricultural_weather_advisories
@@ -11,11 +12,24 @@ from app.modules.soil.analyzer import analyze_soil_metrics
 from app.modules.soil.labs import find_nearby_soil_labs
 from app.modules.rag.retriever import agri_rag
 from app.modules.schemes.scheme_catalog import scheme_catalog
+from app.modules.disease.yolo_service import yolo_leaf_service
 
 class AgriculturalAgentOrchestrator:
+    """
+    Production-grade Agentic Orchestrator fusing:
+    - Multimodal Query Input (Text + Image)
+    - YOLO Foliar Disease Vision Detection
+    - Real-time Open-Meteo Weather & Agro-climatic rules
+    - Machine Learning Crop & Balanced Fertilizer recommendation
+    - Genuine Dense Vector RAG grounded in ICAR/KVK repositories
+    - CIBRC Chemical Safety & Weather Spraying Guardrails
+    - User-friendly Status Badges (replacing raw model CoT)
+    """
+
     def process_query(
         self,
         query: str,
+        image_bytes: Optional[bytes] = None,
         session_id: str = "default_session",
         farmer_id: str = "default_farmer",
         latitude: Optional[float] = None,
@@ -25,13 +39,13 @@ class AgriculturalAgentOrchestrator:
         # 1. Fetch Farmer Profile & History
         profile = get_farmer_profile(farmer_id)
         history = get_recent_chat_history(session_id, limit=3)
-        
+
         # 2. Detect Intent, Slots & Language
         intent_data = detect_intent_and_slots(query, history, requested_lang=lang)
         intent = intent_data["intent"]
         language = intent_data.get("language", "hi")
         crop = intent_data.get("crop") or profile.get("current_crop", "गेहूं" if language == "hi" else "wheat")
-        
+
         # 3. Location & Weather Intelligence
         district = profile.get("district", "Lucknow")
         lat, lon, loc_label = resolve_location(district, latitude, longitude)
@@ -40,62 +54,202 @@ class AgriculturalAgentOrchestrator:
         temp = curr_weather.get("temperature", 28.0)
         humidity = curr_weather.get("humidity", 65)
         wind_speed = curr_weather.get("wind_speed", 8.0)
-        
+
         forecast = weather_data.get("forecast", [])
         rain_expected_48h = any(d.get("rain_prob", 0) >= 30 for d in forecast[:2])
         rain_prob = max([d.get("rain_prob", 0) for d in forecast[:2]] or [10])
 
-        if language == "en":
-            thought_steps = [
-                f"Farmer Profile: {profile.get('name', 'Farmer')} ({profile.get('district', 'Lucknow')})",
-                f"Location & Weather: {loc_label} | Temp {temp}°C, Humidity {humidity}%, Rain Prob {rain_prob}%",
-                f"Classified Intent: {intent} | Target Crop: {crop}"
-            ]
-        else:
-            thought_steps = [
-                f"किसान प्रोफाइल: {profile.get('name', 'किसान')} ({profile.get('district', 'लखनऊ')})",
-                f"स्थान व मौसम: {loc_label} | तापमान {temp}°C, नमी {humidity}%, वर्षा संभावना {rain_prob}%",
-                f"पहचाना गया उद्देश्य (Intent): {intent} | संबंधित फसल: {crop}"
-            ]
+        # Farmer-friendly status badges
+        status_badges = [
+            {"step_key": "intent", "label_hi": "✓ प्रश्न का विश्लेषण", "label_en": "✓ Understanding Question"},
+            {"step_key": "weather", "label_hi": "✓ मौसम एवं मृदा स्थिति", "label_en": "✓ Checking Weather & Soil"}
+        ]
+        thought_steps = [
+            f"✓ किसान: {profile.get('name', 'किसान')} ({loc_label}) | {temp}°C, नमी {humidity}%, बारिश संभावना {rain_prob}%"
+            if language == "hi" else
+            f"✓ Profile: {profile.get('name', 'Farmer')} ({loc_label}) | Temp {temp}°C, Humidity {humidity}%, Rain {rain_prob}%"
+        ]
 
-        # 4. Check for Missing Slots & Clarification
-        if intent_data.get("needs_clarification"):
-            clarification_msg = intent_data["clarification_question"]
+        # 4. Out of Domain Guardrail
+        if intent == "OUT_OF_DOMAIN":
             if language == "en":
-                thought_steps.append("Essential information missing: Generating polite clarification question.")
-                follow_ups = [
-                    "Advice for Wheat crop",
-                    "Advice for Rice crop",
-                    "Advice for Tomato crop",
-                    "Locate nearby soil testing labs"
-                ]
+                msg = (
+                    "🌾 **KrishiSaathi Agricultural Assistant:**\n\n"
+                    "I am dedicated exclusively to agricultural advisory, crop protection, weather forecasts, "
+                    "soil analysis, fertilizer schedules, and government farming schemes.\n\n"
+                    "Please ask any question related to your crops, soil, pest management, or agricultural practices!"
+                )
+                follow_ups = ["Wheat fertilizer schedule", "Recommended crops for this season", "Check PM-KISAN status"]
             else:
-                thought_steps.append("महत्वपूर्ण जानकारी अनुपलब्ध: किसान से स्पष्टीकरण प्रश्न पूछा जा रहा है।")
-                follow_ups = [
-                    "गेहूं की फसल के बारे में",
-                    "धान की फसल के बारे में",
-                    "टमाटर की फसल के बारे में",
-                    "नजदीकी मिट्टी जांच केंद्र बताएं"
-                ]
-            
+                msg = (
+                    "🌾 **कृषि सारथी (KrishiSaathi) कृषि परामर्श:**\n\n"
+                    "मैं केवल कृषि, फसल प्रबंधन, मौसम, मृदा स्वास्थ्य, कीट-रोग नियंत्रण और सरकारी किसान योजनाओं "
+                    "से संबंधित परामर्श देने में सक्षम हूँ।\n\n"
+                    "कृपया अपनी खेती, फसल, खाद, दवा या सरकारी योजनाओं से संबंधित प्रश्न पूछें!"
+                )
+                follow_ups = ["गेहूं में खाद की सही मात्रा", "इस मौसम की श्रेष्ठ फसलें", "पीएम किसान योजना की जानकारी"]
+
+            save_chat_turn(session_id, farmer_id, query, msg, intent)
+            return {
+                "response": msg,
+                "intent": intent,
+                "language": language,
+                "status_badges": status_badges,
+                "thought_steps": thought_steps,
+                "follow_up_suggestions": follow_ups,
+                "citations": [],
+                "weather_summary": f"{loc_label}: {temp}°C, {curr_weather.get('condition', 'Clear')}"
+            }
+
+        # 5. Direct Banned Chemical Check in User Query
+        banned_check = check_query_for_banned_chemicals(query, lang=language)
+        if banned_check and banned_check.get("is_banned"):
+            status_badges.append({"step_key": "safety", "label_hi": "⚠️ CIBRC सुरक्षा प्रतिबंध जांच", "label_en": "⚠️ CIBRC Safety Filter Triggered"})
+            thought_steps.append("⚠️ CIBRC Banned chemical detected in query: returning safe alternative advisory." if language == "en" else "⚠️ प्रतिबंधित रसायन पाया गया: सुरक्षित विकल्प संस्तुति।")
+            save_chat_turn(session_id, farmer_id, query, banned_check["response"], "SAFETY_BLOCKED")
+            return {
+                "response": banned_check["response"],
+                "intent": "SAFETY_BLOCKED",
+                "language": language,
+                "status_badges": status_badges,
+                "thought_steps": thought_steps,
+                "follow_up_suggestions": ["सुरक्षित जैविक नीम स्प्रे कैसे बनाएं?", "फेरोमोन ट्रैप का प्रयोग", "सब्जियों में सुरक्षित कीटनाशक"] if language == "hi" else ["How to prepare Neem spray?", "Pheromone traps", "Safe pesticides for vegetables"],
+                "citations": [{
+                    "source": "केंद्रीय कीटनाशक बोर्ड एवं पंजीकरण समिति (CIBRC)",
+                    "authority": "CIBRC",
+                    "title": "Banned Agrochemicals & Safe Alternatives Notification 2024",
+                    "relevance_score": 1.0,
+                    "citation_badge": "[CIBRC Safety Advisory 2024]"
+                }],
+                "weather_summary": f"{loc_label}: {temp}°C, {curr_weather.get('condition', 'Clear')}"
+            }
+
+        # 6. Multimodal Image Diagnosis & Context Fusion
+        vision_result = None
+        if image_bytes:
+            status_badges.append({"step_key": "vision", "label_hi": "✓ YOLO पत्ती रोग निदान", "label_en": "✓ YOLO Leaf Disease Detection"})
+            thought_steps.append("Executing YOLO foliar vision detector..." if language == "en" else "YOLO पत्ती रोग निदान मॉडल निष्पादित किया गया।")
+            vision_result = yolo_leaf_service.infer(
+                image_bytes=image_bytes,
+                crop_hint=crop,
+                rain_forecast=rain_expected_48h,
+                lang=language
+            )
+
+            # Check for non-leaf rejection
+            if not vision_result.get("is_leaf", True):
+                rej_msg = f"❌ {vision_result.get('rejection_reason', '')}\n\n💡 {vision_result.get('guidance', '')}"
+                save_chat_turn(session_id, farmer_id, query, rej_msg, "VISION_REJECTED")
+                return {
+                    "response": rej_msg,
+                    "intent": "VISION_REJECTED",
+                    "language": language,
+                    "status_badges": status_badges,
+                    "thought_steps": thought_steps,
+                    "vision": vision_result,
+                    "follow_up_suggestions": ["पत्ती की नई फोटो अपलोड करें", "रोग के लक्षण लिखकर बताएं", "केवीके कृषि वैज्ञानिक से बात करें"] if language == "hi" else ["Upload new leaf photo", "Describe symptoms in text", "Contact KVK Scientist"],
+                    "citations": [],
+                    "weather_summary": f"{loc_label}: {temp}°C"
+                }
+
+            # Update crop if vision identified one
+            if vision_result.get("crop_en"):
+                crop = vision_result["crop_en"].lower()
+
+        # 7. Check for Missing Slots & Clarification (when no image uploaded)
+        if not image_bytes and intent_data.get("needs_clarification"):
+            clarification_msg = intent_data["clarification_question"]
+            status_badges.append({"step_key": "clarification", "label_hi": "❓ स्पष्टीकरण आवश्यक", "label_en": "❓ Information Clarification"})
+            thought_steps.append("Essential information missing: requesting clarification." if language == "en" else "महत्वपूर्ण जानकारी अनुपलब्ध: किसान से स्पष्टीकरण पूछा जा रहा है।")
+            follow_ups = [
+                "गेहूं की फसल के बारे में",
+                "धान की फसल के बारे में",
+                "टमाटर की फसल के बारे में",
+                "नजदीकी मिट्टी जांच केंद्र बताएं"
+            ] if language == "hi" else [
+                "Advice for Wheat crop",
+                "Advice for Rice crop",
+                "Advice for Tomato crop",
+                "Locate nearby soil testing labs"
+            ]
             save_chat_turn(session_id, farmer_id, query, clarification_msg, intent)
             return {
                 "response": clarification_msg,
                 "intent": intent,
                 "language": language,
+                "status_badges": status_badges,
                 "thought_steps": thought_steps,
                 "follow_up_suggestions": follow_ups,
+                "citations": [],
                 "weather_summary": f"{loc_label}: {temp}°C, {curr_weather.get('condition', 'Clear')}"
             }
 
-        # 5. Specialized Tool Invocation
+        # 8. Tool Execution & RAG Retrieval
         tool_output = ""
+        citations = []
         follow_ups = []
-        
-        if intent == "WEATHER_FORECAST":
-            thought_steps.append("Executing Weather Intelligence Tool..." if language == "en" else "मौसम उपकरण (Weather Tool) निष्पादित किया गया।")
-            advisories = generate_agricultural_weather_advisories(weather_data)
+
+        # If Image was provided, build multimodal response combining YOLO + RAG
+        if vision_result and vision_result.get("success"):
+            chem = vision_result["chemical_solution"]
+            chem_name = chem.get("name", "")
+            chem_dose = chem.get("dose", "")
             
+            # Ground with dense RAG
+            rag_res = agri_rag.retrieve_with_citations(
+                query=f"{vision_result.get('disease_name_hindi')} {vision_result.get('disease_name_en')} {query}",
+                crop_hint=crop,
+                top_k=2
+            )
+            citations = rag_res.get("citations", [])
+            status_badges.append({"step_key": "rag", "label_hi": "✓ ICAR प्रामाणिक संस्तुति", "label_en": "✓ ICAR Scientific Grounding"})
+
+            if language == "en":
+                tool_output = (
+                    f"🍃 **Multimodal Foliar Diagnosis (YOLO Vision):**\n"
+                    f"• **Detected Disease:** **{vision_result['disease_name_en']}** ({vision_result['crop_en']})\n"
+                    f"• **Confidence Level:** {vision_result['confidence_level_en']} ({vision_result['confidence_score']}%)\n"
+                    f"• **Estimated Foliar Damage:** {vision_result['severity_percentage']}%\n\n"
+                    f"🔍 **Symptoms:** {vision_result['symptoms_en']}\n"
+                    f"🔬 **Pathogen / Cause:** {vision_result['pathogen_cause_en']}\n\n"
+                    f"🌿 **Cultural & Biological Control (IPM):**\n"
+                    f"• {vision_result['immediate_cultural_action_en']}\n"
+                    f"• {vision_result['organic_ipm_remedy_en']}\n\n"
+                    f"🧪 **Recommended Chemical Intervention (CIBRC Approved):**\n"
+                    f"• Chemical: **{chem_name}**\n"
+                    f"• Dosage: {chem_dose}\n\n"
+                    f"{vision_result['weather_spray_advisory_en']}"
+                )
+                if vision_result.get("needs_symptom_clarification"):
+                    qs = "\n".join([f"• {q}" for q in vision_result.get("clarifying_questions", [])])
+                    tool_output += f"\n\n❓ **Clinical Symptom Confirmation:**\nTo confirm this diagnosis, please check:\n{qs}"
+                follow_ups = ["Best time for spray application", "Safe waiting interval before harvest", "Organic neem alternatives"]
+            else:
+                tool_output = (
+                    f"🍃 **पत्ती रोग विश्लेषण (YOLO Vision Detection):**\n"
+                    f"• **पहचाना गया रोग:** **{vision_result['disease_name_hindi']}** ({vision_result['crop']})\n"
+                    f"• **विश्वसनीयता स्तर:** {vision_result['confidence_level']} ({vision_result['confidence_score']}%)\n"
+                    f"• **संक्रमित पत्ती का अनुमानित भाग:** {vision_result['severity_percentage']}%\n\n"
+                    f"🔍 **रोग के लक्षण:** {vision_result['symptoms']}\n"
+                    f"🔬 **कारक व अनुकूल मौसम:** {vision_result['pathogen_cause']}\n\n"
+                    f"🌿 **जैविक व देसी रोकथाम (IPM):**\n"
+                    f"• {vision_result['immediate_cultural_action']}\n"
+                    f"• {vision_result['organic_ipm_remedy']}\n\n"
+                    f"🧪 **संस्तुत रासायनिक उपचार (CIBRC अनुमोदित):**\n"
+                    f"• संस्तुत दवा: **{chem_name}**\n"
+                    f"• मात्रा: {chem_dose}\n\n"
+                    f"{vision_result['weather_spray_advisory']}"
+                )
+                if vision_result.get("needs_symptom_clarification"):
+                    qs = "\n".join([f"• {q}" for q in vision_result.get("clarifying_questions", [])])
+                    tool_output += f"\n\n❓ **लक्षण पुष्टिकरण प्रश्न:**\nनिदान को 100% सटीक करने हेतु कृपया पुष्टि करें:\n{qs}"
+                follow_ups = ["छिड़काव का सबसे सही समय क्या है?", "दवा डालने के कितने दिन बाद फसल काटें?", "जैविक नीम स्प्रे का तरीका"]
+
+        elif intent == "WEATHER_FORECAST":
+            status_badges.append({"step_key": "weather_tool", "label_hi": "✓ मौसम पूर्वानुमान मॉडल", "label_en": "✓ Weather Intelligence Model"})
+            thought_steps.append("Executing Weather Intelligence Model..." if language == "en" else "मौसम पूर्वानुमान मॉडल निष्पादित किया गया।")
+            advisories = generate_agricultural_weather_advisories(weather_data)
+
             if language == "en":
                 adv_text = "\n".join([f"• {a['title']}: {a['advice']}" for a in advisories])
                 tool_output = (
@@ -120,9 +274,10 @@ class AgriculturalAgentOrchestrator:
                 follow_ups = ["अगले 5 दिनों की बारिश का हाल", "क्या अभी खाद डाल सकते हैं?", "कीटनाशक स्प्रे का सही समय"]
 
         elif intent == "CROP_RECOMMENDATION":
-            thought_steps.append("Executing Machine Learning Crop Recommender..." if language == "en" else "मृदा-जलवायु फसल अनुशंसा मॉडल (Crop ML Engine) निष्पादित किया गया।")
+            status_badges.append({"step_key": "crop_ml", "label_hi": "✓ फसल चयन ML इंजन", "label_en": "✓ Crop Selection ML Engine"})
+            thought_steps.append("Executing Machine Learning Crop Recommender..." if language == "en" else "मृदा-जलवायु फसल अनुशंसा मॉडल निष्पादित किया गया।")
             rec = crop_recommender.recommend(n=85, p=45, k=40, temperature=temp, humidity=humidity, ph=7.2, rainfall=100)
-            
+
             if language == "en":
                 crops_list = "\n".join([
                     f"{i+1}. **{c['crop_key'].title()} ({c['hindi_name']})** (Suitability: {c['suitability_score']}%)\n   • Sowing Period: {c['sowing_months']} | Water Need: {c['water_need']}\n   • Note: {c['description']}"
@@ -147,9 +302,10 @@ class AgriculturalAgentOrchestrator:
                 follow_ups = ["इस फसल में खाद की कितनी मात्रा लगेगी?", "बुवाई के लिए बीज दर क्या रखें?", "सरकारी बीज सब्सिडी योजना"]
 
         elif intent == "FERTILIZER_ADVISORY":
-            thought_steps.append("Executing Integrated Nutrient Management (INM) Calculator..." if language == "en" else "संतुलित पोषक तत्व प्रबंधन मॉडल (Fertilizer Engine) निष्पादित किया गया।")
+            status_badges.append({"step_key": "fertilizer_tool", "label_hi": "✓ संतुलित पोषण कैलकुलेटर", "label_en": "✓ Balanced Nutrition Calculator"})
+            thought_steps.append("Executing Integrated Nutrient Management (INM) Calculator..." if language == "en" else "संतुलित पोषक तत्व प्रबंधन मॉडल निष्पादित किया गया।")
             fert = calculate_fertilizer_schedule(crop=crop, soil_n=230, soil_p=12, soil_k=150, rain_forecast_48h=rain_expected_48h, acres=profile.get("farm_size_acres", 1.0))
-            
+
             if language == "en":
                 sched_text = "\n".join([f"• **{s['stage_en']}**: {s['fertilizer_en']}\n   (Method: {s['instructions_en']})" for s in fert["application_schedule"]])
                 organic_text = "\n".join([f"• {inp}" for inp in fert["organic_plan"]["inputs_en"]])
@@ -182,12 +338,13 @@ class AgriculturalAgentOrchestrator:
                 follow_ups = ["जीवामृत बनाने की पूरी विधि", "यूरिया के साथ जिंक कैसे मिलाएं?", "सिंचाई कब करनी चाहिए?"]
 
         elif intent == "PEST_CONTROL":
-            thought_steps.append("Executing Integrated Pest Management (IPM) Advisor..." if language == "en" else "एकीकृत कीट प्रबंधन सलाहकार (IPM Engine) निष्पादित किया गया।")
+            status_badges.append({"step_key": "ipm_tool", "label_hi": "✓ एकीकृत कीट प्रबंधन (IPM)", "label_en": "✓ Integrated Pest Management"})
+            thought_steps.append("Executing Integrated Pest Management (IPM) Advisor..." if language == "en" else "एकीकृत कीट प्रबंधन सलाहकार निष्पादित किया गया।")
             pest_res = get_pest_advisory(query, crop)
             chem = pest_res["chemical_solution"]
             traps = "\n".join([f"• {t}" for t in pest_res["integrated_pest_management"]["cultural_traps"]])
             bio = "\n".join([f"• {b}" for b in pest_res["integrated_pest_management"]["biological_organic"]])
-            
+
             if language == "en":
                 tool_output = (
                     f"🐛 **Pest Diagnosis: {pest_res['pest_name']}**\n"
@@ -214,10 +371,11 @@ class AgriculturalAgentOrchestrator:
                 follow_ups = ["नीम तेल का स्प्रे कैसे तैयार करें?", "फेरोमोन ट्रैप कहां से मिलेगा?", "दवा छिड़काव के बाद कितने दिन न काटें?"]
 
         elif intent == "SOIL_ANALYSIS":
-            thought_steps.append("Executing Soil Intelligence & Govt Lab Finder..." if language == "en" else "मृदा विश्लेषण एवं सरकारी लैब खोजक (Soil Intelligence) निष्पादित किया गया।")
+            status_badges.append({"step_key": "soil_tool", "label_hi": "✓ मृदा स्वास्थ्य कार्ड विश्लेषण", "label_en": "✓ Soil Health Card Assessment"})
+            thought_steps.append("Executing Soil Intelligence & Govt Lab Finder..." if language == "en" else "मृदा विश्लेषण एवं सरकारी लैब खोजक निष्पादित किया गया।")
             soil_res = analyze_soil_metrics(ph=7.2, oc=0.48, n=210, p=11, k=160, state=profile.get("state", "Uttar Pradesh"))
             nearby_labs = find_nearby_soil_labs(profile.get("state", ""), profile.get("district", ""))
-            
+
             if language == "en":
                 def_text = "\n".join([f"• {d}" for d in soil_res["deficiencies_en"]])
                 amend_text = "\n".join([f"• **{a['action_en']}**: {a['dose_en']}" for a in soil_res["amendments"]])
@@ -246,9 +404,10 @@ class AgriculturalAgentOrchestrator:
                 follow_ups = ["मिट्टी का नमूना लेने का सही तरीका", "जिप्सम कब और कैसे डालें?", "गोबर खाद की जगह क्या डालें?"]
 
         elif intent == "GOVT_SCHEME":
-            thought_steps.append("Searching Government Welfare Schemes Knowledge Base..." if language == "en" else "सरकारी योजना ज्ञानकोश (Govt Schemes Catalog) निष्पादित किया गया।")
+            status_badges.append({"step_key": "scheme_tool", "label_hi": "✓ सरकारी योजना ज्ञानकोश", "label_en": "✓ Govt Scheme Catalog"})
+            thought_steps.append("Searching Government Welfare Schemes..." if language == "en" else "सरकारी योजना ज्ञानकोश खोजा गया।")
             schemes = scheme_catalog.search(query)
-            
+
             if language == "en":
                 sch_text = "\n\n".join([
                     f"🏛️ **{s['name']}**\n• Objective: {s['objective']}\n• Eligibility: {s['eligibility']}\n• Benefits: {s['benefits']}\n• How to Apply: {s['how_to_apply']} (Helpline: {s['helpline']})"
@@ -264,9 +423,13 @@ class AgriculturalAgentOrchestrator:
                 tool_output = f"🇮🇳 **किसानों के लिए प्रमुख सरकारी योजनाएं:**\n\n{sch_text}"
                 follow_ups = ["पीएम किसान की किस्त कैसे चेक करें?", "फसल बीमा का क्लेम कैसे करें?", "केसीसी लोन का फॉर्म"]
 
-        else: # GENERAL_AGRI
-            thought_steps.append("Retrieving from ICAR/KVK Knowledge Base (RAG)..." if language == "en" else "ICAR/KVK आरएजी ज्ञानकोश (RAG Knowledge Base) से प्रामाणिक सामग्री खोजी जा रही है।")
-            rag_docs = agri_rag.retrieve(query, top_k=2)
+        else:  # GENERAL_AGRI
+            status_badges.append({"step_key": "dense_rag", "label_hi": "✓ ICAR/KVK आरएजी ज्ञानकोश", "label_en": "✓ Dense ICAR/KVK RAG"})
+            thought_steps.append("Retrieving from Dense ICAR/KVK Vector Knowledge Base..." if language == "en" else "ICAR/KVK आरएजी ज्ञानकोश से प्रामाणिक संस्तुतियां प्राप्त की गईं।")
+            rag_res = agri_rag.retrieve_with_citations(query, crop_hint=crop, top_k=2)
+            citations = rag_res.get("citations", [])
+            rag_docs = rag_res.get("chunks", [])
+
             if language == "en":
                 content_pieces = "\n\n".join([f"📘 *{d['title']}* ({d['source']}):\n{d['content']}" for d in rag_docs])
                 tool_output = f"🌾 **ICAR Agricultural Advisory:**\n\n{content_pieces}"
@@ -276,22 +439,30 @@ class AgriculturalAgentOrchestrator:
                 tool_output = f"🌾 **भारतीय कृषि अनुसंधान परिषद (ICAR) संस्तुति:**\n\n{content_pieces}"
                 follow_ups = ["इसकी सही बुवाई का समय क्या है?", "रोग से बचाव कैसे करें?", "खाद की सही मात्रा"]
 
-        # 6. Safety & Verification Layer
-        thought_steps.append("Performing chemical safety verification & weather constraints check..." if language == "en" else "सुरक्षा, CIBRC रासायनिक सत्यापन व मौसम अनुकूलता जांच की गई।")
+        # 9. Safety & Chemical Verification Layer
+        status_badges.append({"step_key": "safety_check", "label_hi": "✓ CIBRC रासायनिक व मौसम सुरक्षा जांच", "label_en": "✓ CIBRC & Weather Safety Verified"})
+        thought_steps.append("Performing chemical safety verification & weather constraints check..." if language == "en" else "रासायनिक सुरक्षा, CIBRC सत्यापन व मौसम अनुकूलता जांच की गई।")
         safety_result = validate_agricultural_safety(tool_output, weather_rain_prob=rain_prob, wind_speed=wind_speed, lang=language)
         final_answer = safety_result["safe_response"]
 
-        # 7. Persist Context
+        # 10. Persist Turn in Memory
         save_chat_turn(session_id, farmer_id, query, final_answer, intent)
 
-        return {
+        res_dict = {
             "response": final_answer,
             "intent": intent,
             "crop": crop,
             "language": language,
+            "status_badges": status_badges,
             "thought_steps": thought_steps,
+            "citations": citations,
             "follow_up_suggestions": follow_ups,
             "weather_summary": f"{loc_label}: {temp}°C, {curr_weather.get('condition', 'Clear')}"
         }
+
+        if vision_result:
+            res_dict["vision"] = vision_result
+
+        return res_dict
 
 agent_orchestrator = AgriculturalAgentOrchestrator()

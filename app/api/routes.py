@@ -1,4 +1,4 @@
-﻿import io
+import io
 from fastapi import APIRouter, UploadFile, File, Form, Query
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
@@ -68,6 +68,30 @@ def chat_endpoint(req: ChatRequest):
         latitude=req.latitude,
         longitude=req.longitude,
         lang=req.lang
+    )
+
+@router.post("/chat/multimodal")
+async def multimodal_chat_endpoint(
+    message: str = Form(""),
+    file: Optional[UploadFile] = File(None),
+    session_id: str = Form("default_session"),
+    farmer_id: str = Form("default_farmer"),
+    latitude: Optional[float] = Form(None),
+    longitude: Optional[float] = Form(None),
+    lang: Optional[str] = Form(None)
+):
+    image_bytes = None
+    if file:
+        image_bytes = await file.read()
+
+    return agent_orchestrator.process_query(
+        query=message,
+        image_bytes=image_bytes,
+        session_id=session_id,
+        farmer_id=farmer_id,
+        latitude=latitude,
+        longitude=longitude,
+        lang=lang
     )
 
 @router.post("/disease/detect")

@@ -451,3 +451,98 @@ main {
 .advisory-item.safe { background: #e8f5e9; border-left: 4px solid #4caf50; }
 .advisory-item.alert { background: #ffebee; border-left: 4px solid #f44336; }
 .advisory-item.info { background: #e1f5fe; border-left: 4px solid #03a9f4; }
+
+/* Reassuring Status Badges Bar (Replacing internal CoT) */
+.status-badges-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.status-badge-pill {
+  background: #e8f5e9;
+  color: #1b5e20;
+  border: 1px solid #a5d6a7;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Citations Container */
+.citations-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed #c8e6c9;
+}
+
+.citation-chip {
+  background: #f1f8e9;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+  font-size: 0.78rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+/* Chat Attachment Preview */
+.chat-attachment-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 1.2rem;
+  background: #f1f8e9;
+  border-top: 1px solid #c8e6c9;
+}
+
+.chat-attachment-preview img {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #81c784;
+}
+
+.chat-attachment-preview .filename {
+  font-size: 0.82rem;
+  color: #1b5e20;
+  font-weight: 500;
+  flex: 1;
+}
+
+.chat-attachment-preview .clear-btn {
+  background: none;
+  border: none;
+  color: #d32f2f;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.attach-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 6px 8px;
+  color: #2e7d32;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.attach-btn:hover {
+  background: #e8f5e9;
+}
+
+.bbox-canvas-wrap {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
