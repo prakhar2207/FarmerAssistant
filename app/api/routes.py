@@ -22,6 +22,7 @@ class ChatRequest(BaseModel):
     farmer_id: Optional[str] = "default_farmer"
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    lang: Optional[str] = None
 
 class CropRequest(BaseModel):
     n: float = 80.0
@@ -56,6 +57,7 @@ class ProfileRequest(BaseModel):
     current_crop: str = "गेहूं"
     soil_type: str = "जलोढ़ दोमट"
     irrigation_type: str = "ट्यूबवेल"
+    language: str = "Hindi"
 
 @router.post("/chat")
 def chat_endpoint(req: ChatRequest):
@@ -64,17 +66,19 @@ def chat_endpoint(req: ChatRequest):
         session_id=req.session_id,
         farmer_id=req.farmer_id,
         latitude=req.latitude,
-        longitude=req.longitude
+        longitude=req.longitude,
+        lang=req.lang
     )
 
 @router.post("/disease/detect")
 async def detect_disease_endpoint(
     file: UploadFile = File(...),
     crop_hint: str = Form(""),
-    rain_forecast: bool = Form(False)
+    rain_forecast: bool = Form(False),
+    lang: str = Form("hi")
 ):
     contents = await file.read()
-    return disease_detector.detect(contents, crop_hint=crop_hint, rain_forecast=rain_forecast)
+    return disease_detector.detect(contents, crop_hint=crop_hint, rain_forecast=rain_forecast, lang=lang)
 
 @router.post("/soil/analyze")
 def analyze_soil_endpoint(req: SoilRequest):
@@ -143,4 +147,4 @@ def get_profile_endpoint(farmer_id: str = "default_farmer"):
 @router.post("/profile")
 def update_profile_endpoint(req: ProfileRequest):
     update_farmer_profile(req.model_dump())
-    return {"success": True, "message": "किसान प्रोफाइल सफलतापूर्वक अपडेट हुई।"}
+    return {"success": True, "message": "Profile updated successfully / प्रोफाइल सफलतापूर्वक अपडेट हुई।"}

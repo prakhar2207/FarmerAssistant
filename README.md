@@ -1,5 +1,5 @@
 ﻿# 🌾 KrishiSaathi (कृषि साथी)
-### Hindi AI Agricultural Advisory & Agentic Farming Intelligence System
+### Bilingual (Hindi + English) AI Agricultural Advisory & Agentic Farming Intelligence System
 **भारतीय किसानों के लिए आधुनिक एजेंटिक एआई एवं बहुभाषी कृषि निर्णय समर्थन प्रणाली**
 
 ---
