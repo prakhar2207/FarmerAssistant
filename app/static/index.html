@@ -3,335 +3,348 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KrishiSaathi (कृषि साथी) - AI Agricultural Advisory & Agentic Farming Intelligence</title>
+  <title>KrishiSaathi (कृषि साथी) — Multimodal AI Agricultural Advisory</title>
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-  <!-- Header -->
-  <header>
-    <div class="logo-area">
-      <div class="logo-icon">🌾</div>
-      <div class="logo-text">
-        <h1 data-i18n="app_title">कृषि साथी (KrishiSaathi)</h1>
-        <p data-i18n="app_subtitle">भारतीय किसानों के लिए बुद्धिमान एजेंटिक कृषि परामर्श प्रणाली</p>
-      </div>
-    </div>
-    <div class="header-meta">
-      <div class="weather-badge" id="header-weather">
-        📍 स्थान खोजा जा रहा है...
-      </div>
-      <!-- Language Switcher -->
-      <div class="lang-switcher">
-        <label for="lang-select" style="font-size: 0.85rem; font-weight: 600; margin-right: 4px;">🌐 भाषा:</label>
-        <select id="lang-select" style="padding: 4px 8px; border-radius: 12px; border: 1px solid #fff; background: rgba(255,255,255,0.25); color: white; font-weight: 700; cursor: pointer; outline: none;">
-          <option value="hi" style="color: black;">🇮🇳 हिंदी (Hindi)</option>
-          <option value="en" style="color: black;">🌐 English</option>
-        </select>
-      </div>
-    </div>
-  </header>
-
-  <!-- Navigation Tabs -->
-  <nav class="tab-nav">
-    <button class="tab-btn active" data-tab="tab-chat" data-i18n="tab_chat">💬 कृषि मित्र चैट</button>
-    <button class="tab-btn" data-tab="tab-disease" data-i18n="tab_disease">📸 फसल रोग जांच</button>
-    <button class="tab-btn" data-tab="tab-soil" data-i18n="tab_soil">🧪 मृदा स्वास्थ्य कार्ड</button>
-    <button class="tab-btn" data-tab="tab-crop" data-i18n="tab_crop">🌱 फसल चयन सलाहकार</button>
-    <button class="tab-btn" data-tab="tab-weather" data-i18n="tab_weather">🌦️ मौसम व कृषि अलर्ट</button>
-    <button class="tab-btn" data-tab="tab-schemes" data-i18n="tab_schemes">🏛️ सरकारी योजनाएं</button>
-    <button class="tab-btn" data-tab="tab-profile" data-i18n="tab_profile">👤 किसान प्रोफाइल</button>
-  </nav>
-
-  <!-- Main Content Area -->
-  <main>
+  <!-- App Wrapper: Sidebar + Main Area -->
+  <div class="app-layout">
     
-    <!-- Tab 1: Chat Assistant -->
-    <section id="tab-chat" class="tab-content active">
-      <div class="chat-layout">
-        <!-- Main Chat Box -->
-        <div class="chat-box">
-          <div class="messages-area" id="chat-messages">
-            <div class="message agent" id="welcome-message">
-              <strong data-i18n="welcome_title">नमस्ते किसान भाई! 🙏</strong><br>
-              <span data-i18n="welcome_desc">मैं आपका डिजिटल कृषि साथी हूँ। आप मुझसे अपनी भाषा में बोलकर या लिखकर अपनी फसल, खाद, कीट-रोग, मौसम या सरकारी योजनाओं के बारे में पूछ सकते हैं।</span>
-              <div class="message-actions">
-                <button class="tts-btn" onclick="speakText(document.getElementById('welcome-message').innerText)" data-i18n="speak_btn">🔊 बोलकर सुनाएं</button>
+    <!-- Collapsible Sidebar (ChatGPT Style) -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <button class="new-chat-btn" id="new-chat-btn" title="नया संवाद / New Chat">
+          <span class="plus-icon">＋</span>
+          <span data-i18n="btn_new_chat">नया संवाद (New Chat)</span>
+        </button>
+        <button class="sidebar-toggle-btn" id="sidebar-close-btn" title="साइडबार छिपाएं">✕</button>
+      </div>
+
+      <!-- Recent Chat Sessions -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title" data-i18n="history_title">हालिया संवाद / Recent Chats</div>
+        <div class="session-list" id="session-history-list">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- Quick Agricultural Tools Drawer -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title" data-i18n="tools_title">कृषि उपकरण / Tools</div>
+        <nav class="tool-links">
+          <button class="tool-link-btn" onclick="openModal('modal-disease')">
+            <span class="tool-icon">📸</span>
+            <span data-i18n="tool_disease">पत्ती रोग जांच (YOLO)</span>
+          </button>
+          <button class="tool-link-btn" onclick="openModal('modal-soil')">
+            <span class="tool-icon">🧪</span>
+            <span data-i18n="tool_soil">मृदा स्वास्थ्य कार्ड (Soil)</span>
+          </button>
+          <button class="tool-link-btn" onclick="openModal('modal-crop')">
+            <span class="tool-icon">🌱</span>
+            <span data-i18n="tool_crop">फसल चयन AI (Crop ML)</span>
+          </button>
+          <button class="tool-link-btn" onclick="openModal('modal-weather')">
+            <span class="tool-icon">🌦️</span>
+            <span data-i18n="tool_weather">मौसम पूर्वानुमान (Weather)</span>
+          </button>
+          <button class="tool-link-btn" onclick="openModal('modal-schemes')">
+            <span class="tool-icon">🏛️</span>
+            <span data-i18n="tool_schemes">सरकारी योजनाएं (Schemes)</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Sidebar Footer (Farmer Profile) -->
+      <div class="sidebar-footer">
+        <div class="user-profile-widget" onclick="openModal('modal-profile')">
+          <div class="user-avatar">👨‍🌾</div>
+          <div class="user-details">
+            <div class="user-name" id="sidebar-farmer-name">रामसिंह वर्मा</div>
+            <div class="user-meta" id="sidebar-farmer-meta">Lucknow, UP • गेहूं</div>
+          </div>
+          <button class="profile-settings-btn" title="प्रोफाइल संपादित करें">⚙️</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Chat Workspace -->
+    <div class="main-workspace">
+      
+      <!-- Top Navigation Bar -->
+      <header class="top-nav">
+        <div class="top-nav-left">
+          <button class="sidebar-open-btn" id="sidebar-open-btn" title="मेनू खोलें">☰</button>
+          <div class="app-brand">
+            <span class="brand-icon">🌱</span>
+            <span class="brand-name">KrishiSaathi</span>
+            <span class="model-badge">Multimodal RAG</span>
+          </div>
+        </div>
+        
+        <div class="top-nav-right">
+          <div class="weather-pill" id="top-weather-pill" onclick="openModal('modal-weather')" title="मौसम विवरण देखें">
+            📍 <span id="top-weather-text">मौसम लोड हो रहा है...</span>
+          </div>
+
+          <!-- Language Switcher -->
+          <div class="lang-toggle-box">
+            <select id="lang-select" class="lang-select" aria-label="Language selection">
+              <option value="hi">🇮🇳 हिंदी</option>
+              <option value="en">🌐 English</option>
+            </select>
+          </div>
+        </div>
+      </header>
+
+      <!-- Center Message Container (Max Width 820px) -->
+      <div class="chat-viewport" id="chat-viewport">
+        <div class="chat-container">
+          
+          <!-- Empty State / Starter Cards View -->
+          <div class="empty-state-hero" id="empty-state-hero">
+            <div class="hero-icon">🌾</div>
+            <h2 class="hero-title" data-i18n="hero_title">नमस्ते किसान भाई! 🙏</h2>
+            <p class="hero-subtitle" data-i18n="hero_subtitle">
+              मैं आपका AI कृषि सारथी हूँ। अपनी फसल, खाद, कीट-रोग, मौसम या सरकारी योजनाओं के बारे में लिखकर, बोलकर या पत्ती की फोटो भेजकर पूछें।
+            </p>
+
+            <!-- Starter Prompt Cards -->
+            <div class="starter-cards-grid">
+              <div class="starter-card" onclick="triggerStarterPrompt('गेहूं में खाद की सही मात्रा और डालने का समय बताओ')">
+                <div class="starter-card-icon">💊</div>
+                <div class="starter-card-title" data-i18n="starter_1_title">गेहूं में खाद की मात्रा</div>
+                <div class="starter-card-desc" data-i18n="starter_1_desc">यूरिया, डीएपी और पोटाश का संतुलित शेड्यूल</div>
+              </div>
+              <div class="starter-card" onclick="triggerStarterPrompt('पत्ते पीले पड़ रहे हैं और काले धब्बे हैं, क्या उपाय करें?')">
+                <div class="starter-card-icon">📸</div>
+                <div class="starter-card-title" data-i18n="starter_2_title">फसल रोग निदान</div>
+                <div class="starter-card-desc" data-i18n="starter_2_desc">पत्ती पर धब्बे, झुलसा या रतुआ का वैज्ञानिक उपचार</div>
+              </div>
+              <div class="starter-card" onclick="triggerStarterPrompt('अगले 5 दिनों का मौसम और बारिश का पूर्वानुमान क्या है?')">
+                <div class="starter-card-icon">🌦️</div>
+                <div class="starter-card-title" data-i18n="starter_3_title">मौसम व बारिश अलर्ट</div>
+                <div class="starter-card-desc" data-i18n="starter_3_desc">तापमान, वर्षा संभावना और स्प्रे अनुकूलता</div>
+              </div>
+              <div class="starter-card" onclick="triggerStarterPrompt('PM-KISAN सम्मान निधि और फसल बीमा योजना (PMFBY) की जानकारी दो')">
+                <div class="starter-card-icon">🏛️</div>
+                <div class="starter-card-title" data-i18n="starter_4_title">सरकारी किसान योजनाएं</div>
+                <div class="starter-card-desc" data-i18n="starter_4_desc">पीएम किसान, पीएमएफबीवाई और केसीसी आवेदन</div>
               </div>
             </div>
           </div>
 
-          <!-- Clickable Follow-up Chips -->
-          <div class="chips-container" id="chips-container">
-            <!-- Populated dynamically via JS -->
-          </div>
+          <!-- Message Stream Area -->
+          <div class="messages-stream" id="messages-stream"></div>
 
-          <!-- Image Attachment Preview -->
-          <div id="chat-attachment-preview" class="chat-attachment-preview" style="display: none;">
-            <img id="chat-preview-img" src="" alt="Attached leaf">
-            <span id="chat-preview-name" class="filename">photo.jpg</span>
-            <button id="chat-preview-clear" class="clear-btn" title="हटाएं (Remove)">✕</button>
-          </div>
-
-          <!-- Input Bar with Voice Mic & Attachment -->
-          <div class="chat-input-bar">
-            <input type="file" id="chat-file-input" accept="image/*" style="display: none;">
-            <button class="attach-btn" id="attach-btn" title="पत्ती की फोटो जोड़ें (Attach Leaf Photo)">📷</button>
-            <button class="mic-btn" id="mic-btn" title="माइक दबाकर बोलें (Voice Input)">🎙️</button>
-            <input type="text" id="chat-input" placeholder="यहाँ अपना सवाल लिखें या बोलें (उदा: गेहूं के पत्ते पीले हो रहे हैं)..." autocomplete="off">
-            <button class="send-btn" id="send-btn" title="भेजें">➤</button>
-          </div>
-        </div>
-
-        <!-- Sidebar Helper Widgets -->
-        <div class="chat-sidebar">
-          <div class="sidebar-widget">
-            <div class="sidebar-title" data-i18n="quick_services_title">⚡ त्वरित कृषि सेवाएं</div>
-            <p style="font-size: 0.85rem; color: #555; margin-bottom: 10px;" data-i18n="quick_services_desc">विशिष्ट उपकरणों का सीधा उपयोग करें:</p>
-            <button class="btn-primary" style="width: 100%; margin-bottom: 8px; font-size: 0.85rem; padding: 8px;" onclick="showTab('tab-disease')" data-i18n="btn_check_leaf">📸 पत्ती की फोटो जांचें</button>
-            <button class="btn-primary" style="width: 100%; margin-bottom: 8px; font-size: 0.85rem; padding: 8px; background: #388e3c;" onclick="showTab('tab-soil')" data-i18n="btn_check_soil">🧪 मृदा स्वास्थ्य कार्ड विश्लेषण</button>
-            <button class="btn-primary" style="width: 100%; font-size: 0.85rem; padding: 8px; background: #0288d1;" onclick="showTab('tab-crop')" data-i18n="btn_calc_crop">🌱 सर्वोत्तम फसल की गणना</button>
-          </div>
-
-          <div class="sidebar-widget">
-            <div class="sidebar-title" data-i18n="safety_title">🛡️ किसान सुरक्षा गारंटी</div>
-            <ul style="font-size: 0.82rem; color: #444; margin-left: 16px; line-height: 1.5;" id="safety-bullets">
-              <li data-i18n="safety_1">प्रतिबंधित कीटनाशकों (Endosulfan आदि) पर पूर्ण रोक।</li>
-              <li data-i18n="safety_2">वर्षा व आंधी में छिड़काव रोकने की सुरक्षा चेतावनी।</li>
-              <li data-i18n="safety_3">ICAR एवं कृषि विज्ञान केंद्र (KVK) द्वारा संस्तुत प्रमाणिक उपाय।</li>
-            </ul>
-          </div>
         </div>
       </div>
-    </section>
 
-    <!-- Tab 2: Disease Diagnostic -->
-    <section id="tab-disease" class="tab-content">
-      <div class="card">
-        <h2 class="card-title" data-i18n="disease_title">📸 फसल रोग एवं पत्ती स्वास्थ्य जांच (AI Vision Diagnostic)</h2>
-        <p style="color: #555; margin-bottom: 1.2rem;" data-i18n="disease_subtitle">
-          अपनी फसल के प्रभावित पत्ते की स्पष्ट फोटो अपलोड करें। हमारा कंप्यूटर विज़न मॉडल रोग की पहचान कर जैविक व रासायनिक उपचार सुझाएगा।
-        </p>
-
-        <div style="max-width: 600px; margin-bottom: 1.5rem;">
-          <div class="form-group" style="margin-bottom: 12px;">
-            <label data-i18n="lbl_crop_hint">संबंधित फसल (वैकल्पिक):</label>
-            <select id="disease-crop-hint">
-              <option value="" data-i18n="opt_auto_detect">स्वचालित पहचान (Auto Detect)</option>
-              <option value="tomato">टमाटर (Tomato)</option>
-              <option value="potato">आलू (Potato)</option>
-              <option value="wheat">गेहूं (Wheat)</option>
-              <option value="rice">धान (Rice)</option>
-              <option value="cotton">कपास (Cotton)</option>
-              <option value="onion">प्याज (Onion)</option>
-              <option value="maize">मक्का (Maize)</option>
-              <option value="grapes">अंगूर (Grapes)</option>
-            </select>
+      <!-- Floating Bottom Input Area (Centered Max 820px) -->
+      <footer class="bottom-input-zone">
+        <div class="input-inner-wrapper">
+          
+          <!-- Attachment Preview Strip -->
+          <div class="attachment-preview-bar" id="attachment-preview-bar" style="display: none;">
+            <div class="preview-thumb-box">
+              <img id="preview-thumb-img" src="" alt="Attached leaf">
+              <button class="clear-thumb-btn" id="clear-thumb-btn" title="फोटो हटाएं">✕</button>
+            </div>
+            <div class="preview-details">
+              <span class="preview-filename" id="preview-filename">leaf_photo.jpg</span>
+              <span class="preview-badge" data-i18n="photo_attached">पत्ती की फोटो संलग्न (YOLO Vision Active)</span>
+            </div>
           </div>
 
-          <div class="dropzone" id="disease-dropzone">
-            <div style="font-size: 2.5rem; margin-bottom: 8px;">📷</div>
-            <strong data-i18n="dropzone_title">यहाँ पत्ते की फोटो खींचकर छोड़ें या क्लिक करके अपलोड करें</strong>
-            <p style="font-size: 0.85rem; color: #666; margin-top: 4px;" data-i18n="dropzone_desc">JPG, PNG या WEBP समर्थित</p>
-            <input type="file" id="disease-file" accept="image/*" style="display: none;">
+          <!-- Input Bar -->
+          <div class="input-pill-container">
+            <input type="file" id="chat-photo-input" accept="image/*" style="display: none;">
+            <button class="pill-btn attach-btn" id="chat-attach-btn" title="पत्ती की फोटो जोड़ें (Attach Leaf Photo)">
+              📷
+            </button>
+            <button class="pill-btn mic-btn" id="chat-mic-btn" title="बोलकर पूछें (Voice Input)">
+              🎙️
+            </button>
+            <textarea id="chat-textarea" rows="1" placeholder="यहाँ अपनी फसल या सवाल के बारे में पूछें..." autocomplete="off"></textarea>
+            <button class="pill-btn send-btn" id="chat-send-btn" title="भेजें (Send)">
+              ➤
+            </button>
           </div>
+
+          <!-- Disclaimer Footnote -->
+          <div class="disclaimer-note" data-i18n="footer_disclaimer">
+            🌾 कृषि साथी AI भारतीय कृषि अनुसंधान परिषद (ICAR) संस्तुतियों पर आधारित है। रासायनिक छिड़काव से पहले मौसम व सुरक्षा नियमों का पालन करें।
+          </div>
+
         </div>
+      </footer>
 
-        <div id="disease-result"></div>
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- Dedicated Tool Modals (Clean Overlay Sheets)              -->
+  <!-- ======================================================== -->
+
+  <!-- Modal 1: Foliar Disease Diagnostic -->
+  <div class="modal-overlay" id="modal-disease">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">📸 फसल रोग एवं पत्ती स्वास्थ्य जांच (AI Vision)</div>
+        <button class="modal-close-btn" onclick="closeModal('modal-disease')">✕</button>
       </div>
-    </section>
-
-    <!-- Tab 3: Soil Health Card -->
-    <section id="tab-soil" class="tab-content">
-      <div class="card">
-        <h2 class="card-title" data-i18n="soil_title">🧪 मृदा स्वास्थ्य कार्ड विश्लेषण एवं सरकारी लैब खोजक</h2>
-        <p style="color: #555; margin-bottom: 1.2rem;" data-i18n="soil_subtitle">
-          अपनी मिट्टी जांच रिपोर्ट (Soil Health Card) के आंकड़े दर्ज करें। प्रणाली पोषक तत्वों की कमियां पहचान कर सुधार हेतु संस्तुति और नजदीकी लैब बताएगी।
+      <div class="modal-body">
+        <p style="color: #555; margin-bottom: 12px; font-size: 0.9rem;">
+          पौधे की पत्ती की स्पष्ट फोटो अपलोड करें। हमारा YOLO विज़न मॉडल रोग के लक्षणों को पहचान कर सुरक्षित उपचार सुझाएगा।
         </p>
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label>संबंधित फसल (वैकल्पिक):</label>
+          <select id="modal-disease-crop" class="form-control">
+            <option value="">स्वचालित पहचान (Auto Detect)</option>
+            <option value="tomato">टमाटर (Tomato)</option>
+            <option value="potato">आलू (Potato)</option>
+            <option value="wheat">गेहूं (Wheat)</option>
+            <option value="rice">धान (Rice)</option>
+            <option value="cotton">कपास (Cotton)</option>
+            <option value="onion">प्याज (Onion)</option>
+            <option value="grapes">अंगूर (Grapes)</option>
+          </select>
+        </div>
+        <div class="modal-dropzone" id="modal-disease-dropzone">
+          <input type="file" id="modal-disease-file" accept="image/*" style="display: none;">
+          <div style="font-size: 2.2rem; margin-bottom: 6px;">📸</div>
+          <div style="font-weight: 600;">यहाँ पत्ते की फोटो खींचकर छोड़ें या क्लिक करके अपलोड करें</div>
+          <div style="font-size: 0.8rem; color: #777; margin-top: 4px;">JPG, PNG या WEBP समर्थित</div>
+        </div>
+        <div id="modal-disease-result" style="margin-top: 14px;"></div>
+      </div>
+    </div>
+  </div>
 
-        <form id="soil-form">
-          <div class="form-grid">
-            <div class="form-group">
-              <label data-i18n="lbl_ph">पीएच मान (pH):</label>
-              <input type="number" step="0.1" id="soil-ph" value="7.2" required>
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_oc">जैविक कार्बन (OC %):</label>
-              <input type="number" step="0.01" id="soil-oc" value="0.48" required>
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_n">उपलब्ध नाइट्रोजन (N kg/ha):</label>
-              <input type="number" step="1" id="soil-n" value="220" required>
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_p">उपलब्ध फॉस्फोरस (P kg/ha):</label>
-              <input type="number" step="0.5" id="soil-p" value="12.0" required>
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_k">उपलब्ध पोटाश (K kg/ha):</label>
-              <input type="number" step="1" id="soil-k" value="150" required>
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_ec">विद्युत चालकता (EC dS/m):</label>
-              <input type="number" step="0.05" id="soil-ec" value="0.40" required>
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_zn">जिंक (Zn ppm):</label>
-              <input type="number" step="0.1" id="soil-zn" value="0.55">
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_s">सल्फर/गंधक (S ppm):</label>
-              <input type="number" step="0.5" id="soil-s" value="9.0">
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_state">राज्य (State):</label>
-              <input type="text" id="soil-state" value="Uttar Pradesh">
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_district">जिला (District):</label>
-              <input type="text" id="soil-district" value="Lucknow">
-            </div>
+  <!-- Modal 2: Soil Health Card -->
+  <div class="modal-overlay" id="modal-soil">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">🧪 मृदा स्वास्थ्य कार्ड विश्लेषण एवं KVK लैब खोजक</div>
+        <button class="modal-close-btn" onclick="closeModal('modal-soil')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="modal-soil-form">
+          <div class="grid-2-col">
+            <div class="form-group"><label>पीएच मान (pH):</label><input type="number" step="0.1" id="modal-soil-ph" value="7.2" required class="form-control"></div>
+            <div class="form-group"><label>जैविक कार्बन (OC %):</label><input type="number" step="0.01" id="modal-soil-oc" value="0.55" required class="form-control"></div>
+            <div class="form-group"><label>नाइट्रोजन (N kg/ha):</label><input type="number" step="1" id="modal-soil-n" value="240" required class="form-control"></div>
+            <div class="form-group"><label>फॉस्फोरस (P kg/ha):</label><input type="number" step="0.1" id="modal-soil-p" value="14.0" required class="form-control"></div>
+            <div class="form-group"><label>पोटाश (K kg/ha):</label><input type="number" step="1" id="modal-soil-k" value="160" required class="form-control"></div>
+            <div class="form-group"><label>विद्युत चालकता (EC dS/m):</label><input type="number" step="0.01" id="modal-soil-ec" value="0.40" required class="form-control"></div>
+            <div class="form-group"><label>जिंक (Zn ppm):</label><input type="number" step="0.1" id="modal-soil-zn" value="0.8" class="form-control"></div>
+            <div class="form-group"><label>सल्फर (S ppm):</label><input type="number" step="0.1" id="modal-soil-s" value="12.0" class="form-control"></div>
+            <div class="form-group"><label>राज्य (State):</label><input type="text" id="modal-soil-state" value="Uttar Pradesh" class="form-control"></div>
+            <div class="form-group"><label>जिला (District):</label><input type="text" id="modal-soil-district" value="Lucknow" class="form-control"></div>
           </div>
-          <button type="submit" class="btn-primary" data-i18n="btn_analyze_soil">🧪 मिट्टी स्वास्थ्य कार्ड की जांच करें</button>
+          <button type="submit" class="btn-primary" style="width: 100%; margin-top: 12px;">🧪 मृदा स्वास्थ्य रिपोर्ट तैयार करें</button>
         </form>
-
-        <div id="soil-result" style="margin-top: 1.5rem;"></div>
+        <div id="modal-soil-result" style="margin-top: 14px;"></div>
       </div>
-    </section>
+    </div>
+  </div>
 
-    <!-- Tab 4: Crop Recommender -->
-    <section id="tab-crop" class="tab-content">
-      <div class="card">
-        <h2 class="card-title" data-i18n="crop_rec_title">🌱 मशीन लर्निंग आधारित फसल चयन सलाहकार (Crop Recommendation)</h2>
-        <p style="color: #555; margin-bottom: 1.2rem;" data-i18n="crop_rec_subtitle">
-          अपनी मिट्टी के पोषक तत्व और मौसम दर्ज करें। हमारा AI मॉडल (22 फसलों पर प्रशिक्षित) आपकी परिस्थितियों के अनुसार सर्वश्रेष्ठ 3 फसलों की सिफारिश करेगा।
-        </p>
-
-        <div style="margin-bottom: 1rem;">
-          <button type="button" class="btn-primary" id="sync-weather-crop-btn" style="background: #0288d1; font-size: 0.85rem; padding: 8px 14px;" data-i18n="btn_sync_weather">
-            🌦️ वर्तमान लाइव मौसम से तापमान व नमी सिंक करें
-          </button>
-        </div>
-
-        <form id="crop-rec-form">
-          <div class="form-grid">
-            <div class="form-group">
-              <label data-i18n="lbl_crop_n">नाइट्रोजन (N स्तर):</label>
-              <input type="number" step="1" id="crop-n" value="85" required>
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_crop_p">फॉस्फोरस (P स्तर):</label>
-              <input type="number" step="1" id="crop-p" value="45" required>
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_crop_k">पोटाश (K स्तर):</label>
-              <input type="number" step="1" id="crop-k" value="40" required>
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_temp">तापमान (°C):</label>
-              <input type="number" step="0.1" id="crop-temp" value="25.5" required>
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_humidity">नमी (Humidity %):</label>
-              <input type="number" step="1" id="crop-humidity" value="65" required>
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_crop_ph">पीएच मान (pH):</label>
-              <input type="number" step="0.1" id="crop-ph" value="6.8" required>
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_rainfall">अनुमानित वर्षा (Rainfall mm):</label>
-              <input type="number" step="5" id="crop-rainfall" value="120" required>
+  <!-- Modal 3: Crop ML Recommender -->
+  <div class="modal-overlay" id="modal-crop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">🌱 फसल चयन सलाहकार (Crop ML Engine)</div>
+        <button class="modal-close-btn" onclick="closeModal('modal-crop')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="modal-crop-form">
+          <div class="grid-2-col">
+            <div class="form-group"><label>नाइट्रोजन (N):</label><input type="number" id="modal-crop-n" value="85" class="form-control"></div>
+            <div class="form-group"><label>फॉस्फोरस (P):</label><input type="number" id="modal-crop-p" value="45" class="form-control"></div>
+            <div class="form-group"><label>पोटाश (K):</label><input type="number" id="modal-crop-k" value="40" class="form-control"></div>
+            <div class="form-group"><label>तापमान (°C):</label><input type="number" step="0.1" id="modal-crop-temp" value="26.5" class="form-control"></div>
+            <div class="form-group"><label>हवा में नमी (%):</label><input type="number" id="modal-crop-humidity" value="68" class="form-control"></div>
+            <div class="form-group"><label>पीएच मान (pH):</label><input type="number" step="0.1" id="modal-crop-ph" value="6.8" class="form-control"></div>
+            <div class="form-group"><label>अनुमानित वर्षा (mm):</label><input type="number" id="modal-crop-rainfall" value="120" class="form-control"></div>
+            <div class="form-group"><label>बुवाई का माह (Month):</label>
+              <select id="modal-crop-month" class="form-control">
+                <option value="1">जनवरी</option><option value="2">फरवरी</option><option value="3">मार्च</option><option value="4">अप्रैल</option>
+                <option value="5">मई</option><option value="6">जून</option><option value="7" selected>जुलाई (सावनी/खरीफ)</option><option value="8">अगस्त</option>
+                <option value="9">सितंबर</option><option value="10">अक्टूबर (रबी)</option><option value="11">नवंबर</option><option value="12">दिसंबर</option>
+              </select>
             </div>
           </div>
-          <button type="submit" class="btn-primary" data-i18n="btn_calc_crops">🌱 सबसे अनुकूल फसलों की गणना करें</button>
+          <button type="submit" class="btn-primary" style="width: 100%; margin-top: 12px;">🌱 श्रेष्ठ फसलों की गणना करें</button>
         </form>
-
-        <div id="crop-rec-result" style="margin-top: 1.5rem;"></div>
+        <div id="modal-crop-result" style="margin-top: 14px;"></div>
       </div>
-    </section>
+    </div>
+  </div>
 
-    <!-- Tab 5: Weather & Alerts -->
-    <section id="tab-weather" class="tab-content">
-      <div class="card">
-        <h2 class="card-title" data-i18n="weather_title">🌦️ मौसम पूर्वानुमान एवं कृषि मौसम अलर्ट</h2>
-        <div style="display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap;">
-          <input type="text" id="weather-search-district" placeholder="जिला दर्ज करें (उदा: Varanasi, Karnal, Patna)" style="padding: 8px 12px; border: 1px solid #c8e6c9; border-radius: 6px; min-width: 250px;">
-          <button class="btn-primary" onclick="loadLiveWeather(document.getElementById('weather-search-district').value)" data-i18n="btn_view_weather">🔍 मौसम देखें</button>
-        </div>
-        <div id="weather-display-box">
-          मौसम जानकारी लोड हो रही है...
-        </div>
+  <!-- Modal 4: Weather & Agro Advisories -->
+  <div class="modal-overlay" id="modal-weather">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">🌦️ मौसम पूर्वानुमान एवं कृषि अलर्ट</div>
+        <button class="modal-close-btn" onclick="closeModal('modal-weather')">✕</button>
       </div>
-    </section>
-
-    <!-- Tab 6: Government Schemes -->
-    <section id="tab-schemes" class="tab-content">
-      <div class="card">
-        <h2 class="card-title" data-i18n="schemes_title">🏛️ भारतीय किसान कल्याणकारी सरकारी योजनाएं (Govt Schemes Portal)</h2>
-        <p style="color: #555; margin-bottom: 1.2rem;" data-i18n="schemes_subtitle">
-          केंद्र एवं राज्य सरकारों द्वारा किसानों के लिए संचालित वित्तीय, बीमा एवं सब्सिडी योजनाओं की प्रामाणिक जानकारी:
-        </p>
-
-        <div style="margin-bottom: 1.5rem;">
-          <input type="text" id="schemes-search" placeholder="योजना खोजें (जैसे: सम्मान निधि, फसल बीमा, सोलर पंप, केसीसी)..." style="width: 100%; max-width: 500px; padding: 10px 14px; border: 1px solid #c8e6c9; border-radius: 8px; font-size: 0.95rem;">
+      <div class="modal-body">
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <input type="text" id="modal-weather-district" placeholder="जिला दर्ज करें (उदा: Varanasi, Lucknow)..." class="form-control">
+          <button class="btn-primary" onclick="searchWeatherModal()">खोजें</button>
         </div>
-
-        <div id="schemes-display-box"></div>
+        <div id="modal-weather-content"></div>
       </div>
-    </section>
+    </div>
+  </div>
 
-    <!-- Tab 7: Farmer Profile -->
-    <section id="tab-profile" class="tab-content">
-      <div class="card">
-        <h2 class="card-title" data-i18n="profile_title">👤 किसान प्रोफाइल प्रबंधन (Personalized Farming Profile)</h2>
-        <p style="color: #555; margin-bottom: 1.2rem;" data-i18n="profile_subtitle">
-          अपनी प्रोफाइल विवरण को सुरक्षित करें ताकि कृषि साथी की प्रत्येक सलाह आपके खेत, क्षेत्र और फसल के अनुकूल हो सके।
-        </p>
+  <!-- Modal 5: Government Schemes -->
+  <div class="modal-overlay" id="modal-schemes">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">🏛️ सरकारी किसान कल्याण योजनाएं</div>
+        <button class="modal-close-btn" onclick="closeModal('modal-schemes')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <input type="text" id="modal-schemes-search" placeholder="योजना खोजें (उदा: PM-KISAN, बीमा, केसीसी)..." class="form-control">
+          <button class="btn-primary" onclick="searchSchemesModal()">खोजें</button>
+        </div>
+        <div id="modal-schemes-content"></div>
+      </div>
+    </div>
+  </div>
 
-        <form id="profile-form">
-          <div class="form-grid">
-            <div class="form-group">
-              <label data-i18n="lbl_name">किसान का नाम:</label>
-              <input type="text" id="prof-name" required>
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_village">ग्राम / गांव:</label>
-              <input type="text" id="prof-village">
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_prof_district">जिला (District):</label>
-              <input type="text" id="prof-district" required>
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_prof_state">राज्य (State):</label>
-              <input type="text" id="prof-state" required>
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_acres">खेत का आकार (एकड़ में):</label>
-              <input type="number" step="0.5" id="prof-acres" required>
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_current_crop">वर्तमान मुख्य फसल:</label>
-              <input type="text" id="prof-crop" required>
-            </div>
-            <div class="form-group">
-              <label data-i18n="lbl_soil_type">मिट्टी का प्रकार:</label>
-              <input type="text" id="prof-soil">
-            </div>
+  <!-- Modal 6: Farmer Profile -->
+  <div class="modal-overlay" id="modal-profile">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">👤 किसान प्रोफाइल प्रबंधन</div>
+        <button class="modal-close-btn" onclick="closeModal('modal-profile')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="modal-profile-form">
+          <div class="grid-2-col">
+            <div class="form-group"><label>किसान का नाम:</label><input type="text" id="profile-name" value="रामसिंह वर्मा" class="form-control" required></div>
+            <div class="form-group"><label>गांव / पंचायत:</label><input type="text" id="profile-village" value="बख्शी का तालाब" class="form-control"></div>
+            <div class="form-group"><label>जिला:</label><input type="text" id="profile-district" value="Lucknow" class="form-control" required></div>
+            <div class="form-group"><label>राज्य:</label><input type="text" id="profile-state" value="Uttar Pradesh" class="form-control" required></div>
+            <div class="form-group"><label>खेत का आकार (एकड़):</label><input type="number" step="0.1" id="profile-acres" value="3.5" class="form-control"></div>
+            <div class="form-group"><label>वर्तमान मुख्य फसल:</label><input type="text" id="profile-crop" value="गेहूं" class="form-control"></div>
+            <div class="form-group"><label>मिट्टी का प्रकार:</label><input type="text" id="profile-soil" value="जलोढ़ दोमट" class="form-control"></div>
+            <div class="form-group"><label>सिंचाई स्रोत:</label><input type="text" id="profile-irrigation" value="ट्यूबवेल" class="form-control"></div>
           </div>
-          <button type="submit" class="btn-primary" data-i18n="btn_save_profile">💾 प्रोफाइल सुरक्षित करें</button>
+          <button type="submit" class="btn-primary" style="width: 100%; margin-top: 14px;">💾 प्रोफाइल सहेजें (Save Profile)</button>
         </form>
+        <div id="modal-profile-status" style="margin-top: 10px;"></div>
       </div>
-    </section>
-
-  </main>
-
-  <!-- Footer -->
-  <footer style="background: #1b5e20; color: white; text-align: center; padding: 1rem; font-size: 0.85rem; margin-top: auto;">
-    <p data-i18n="footer_text">कृषि साथी (KrishiSaathi) — ICAR एवं भारत सरकार की कृषि संस्तुतियों पर आधारित AI निर्णय समर्थन प्रणाली</p>
-    <p style="opacity: 0.8; margin-top: 4px;" data-i18n="footer_helpline">किसान कॉल सेंटर टोल-फ्री: <strong>1800-180-1551</strong> | आपातकालीन कृषि परामर्श</p>
-  </footer>
+    </div>
+  </div>
 
   <script src="/js/app.js"></script>
 </body>

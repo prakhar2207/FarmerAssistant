@@ -1,4 +1,4 @@
-﻿import sqlite3
+import sqlite3
 import json
 from datetime import datetime
 from typing import Dict, Any, List, Optional
@@ -125,4 +125,64 @@ def get_recent_chat_history(session_id: str, limit: int = 5) -> List[Dict[str, A
     conn.close()
     return [dict(r) for r in reversed(rows)]
 
+def get_chat_sessions(farmer_id: str = "default_farmer", limit: int = 20) -> List[Dict[str, Any]]:
+    """Retrieves all distinct chat sessions for a farmer with title and message count."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+    SELECT session_id, user_message, intent, MAX(timestamp) as last_activity, COUNT(id) as message_count
+    FROM chat_history
+    WHERE farmer_id = ?
+    GROUP BY session_id
+    ORDER BY last_activity DESC
+    LIMIT ?
+    """, (farmer_id, limit))
+    rows = cursor.fetchall()
+    conn.close()
+    sessions = []
+    for r in rows:
+        msg = r["user_message"] or "कृषि परामर्श / Farm Chat"
+        title = msg[:36] + ("..." if len(msg) > 36 else "")
+        sessions.append({
+            "session_id": r["session_id"],
+            "title": title,
+            "intent": r["intent"],
+            "last_activity": r["last_activity"],
+            "message_count": r["message_count"]
+        })
+    return sessions
+
+def get_session_turns(session_id: str) -> List[Dict[str, Any]]:
+    """Retrieves full conversation turns for a session in chronological order."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+    SELECT user_message, agent_response, intent, timestamp 
+    FROM chat_history 
+    WHERE session_id = ? 
+    ORDER BY id ASC
+    """, (session_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def delete_chat_session(session_id: str) -> bool:
+    """Deletes all messages associated with a session."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM chat_history WHERE session_id = ?", (session_id,))
+    conn.commit()
+    conn.close()
+    return True
+
+def clear_all_chat_history(farmer_id: str = "default_farmer") -> bool:
+    """Resets all chat history for a farmer."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM chat_history WHERE farmer_id = ?", (farmer_id,))
+    conn.commit()
+    conn.close()
+    return True
+
 init_db()
+
