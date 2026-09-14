@@ -1,4 +1,9 @@
-import torch
+try:
+    import torch
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+    torch = None
 import logging
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -49,8 +54,8 @@ app.include_router(api_router, prefix="/api")
 
 @app.get("/api/health")
 def health_check():
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    device_name = torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU"
+    device = "cuda" if (TORCH_AVAILABLE and torch.cuda.is_available()) else "cpu"
+    device_name = torch.cuda.get_device_name(0) if (TORCH_AVAILABLE and torch.cuda.is_available()) else "CPU"
     return {
         "status": "online",
         "health": "healthy",
