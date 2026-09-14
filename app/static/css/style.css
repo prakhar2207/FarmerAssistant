@@ -1005,3 +1005,238 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ========================================================
+   Interactive Zero-Gravity / Anti-Gravity Physics System
+   ======================================================== */
+
+/* Navbar Zero-G Trigger Button */
+.zero-g-btn {
+  background: linear-gradient(135deg, #0d8c6d 0%, #1b5e20 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(16, 163, 127, 0.3);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  user-select: none;
+}
+
+.zero-g-btn:hover {
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 4px 16px rgba(16, 163, 127, 0.5), 0 0 12px rgba(16, 163, 127, 0.4);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.zero-g-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.zero-g-btn .zero-g-icon {
+  font-size: 1rem;
+  transition: transform 0.4s ease;
+}
+
+.zero-g-btn.active {
+  background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%);
+  border-color: #a78bfa;
+  box-shadow: 0 0 20px rgba(167, 139, 250, 0.6), 0 4px 16px rgba(124, 58, 237, 0.4);
+  animation: zeroGGlitchPulse 2s infinite ease-in-out;
+}
+
+.zero-g-btn.active .zero-g-icon {
+  transform: rotate(180deg) scale(1.1);
+}
+
+.zero-g-shortcut-hint {
+  font-size: 0.68rem;
+  opacity: 0.75;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: 2px;
+}
+
+@keyframes zeroGGlitchPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(167, 139, 250, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(167, 139, 250, 0.8), 0 0 10px rgba(236, 72, 153, 0.4);
+  }
+}
+
+/* Floating Status Indicator Banner */
+.zero-g-status-banner {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  color: #f3e8ff;
+  padding: 8px 18px;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 15px rgba(167, 139, 250, 0.3);
+  z-index: 10000;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.zero-g-status-banner.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.zero-g-status-banner .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #a78bfa;
+  box-shadow: 0 0 8px #a78bfa;
+  animation: zeroGDotPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes zeroGDotPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.5; }
+}
+
+.zero-g-status-close {
+  background: none;
+  border: none;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0 4px;
+  margin-left: 6px;
+  transition: color 0.15s;
+}
+
+.zero-g-status-close:hover {
+  color: #ffffff;
+}
+
+/* Antigravity Active Page State */
+body.antigravity-active {
+  background: #090d16 !important;
+}
+
+body.antigravity-active .main-workspace,
+body.antigravity-active .app-layout {
+  background: transparent !important;
+}
+
+/* Floating Bodies Physics Styling */
+.ag-floating-body {
+  cursor: grab !important;
+  user-select: none !important;
+  box-shadow: 0 16px 36px rgba(16, 163, 127, 0.22), 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  border-color: rgba(16, 163, 127, 0.4) !important;
+  position: relative !important;
+}
+
+.ag-floating-body:hover {
+  box-shadow: 0 20px 42px rgba(16, 163, 127, 0.35), 0 0 20px rgba(16, 163, 127, 0.25) !important;
+}
+
+.ag-floating-body.ag-dragging {
+  cursor: grabbing !important;
+  box-shadow: 0 26px 54px rgba(124, 58, 237, 0.45), 0 0 30px rgba(167, 139, 250, 0.35) !important;
+  border-color: rgba(167, 139, 250, 0.7) !important;
+}
+
+/* Auto-Dock / Settle Phase Transition */
+.ag-settling {
+  pointer-events: none !important;
+  user-select: none !important;
+  transition: transform 0.78s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  box-shadow: 0 4px 14px rgba(16, 163, 127, 0.15) !important;
+}
+
+/* Burst Reward Banner Accent */
+.zero-g-status-banner.ag-reward-burst {
+  border-color: rgba(52, 211, 153, 0.75) !important;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(6, 78, 59, 0.92)) !important;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.35), 0 0 24px rgba(52, 211, 153, 0.45) !important;
+  animation: burstBannerGlow 2s infinite ease-in-out;
+}
+
+@keyframes burstBannerGlow {
+  0%, 100% {
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.35), 0 0 20px rgba(52, 211, 153, 0.4);
+  }
+  50% {
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45), 0 0 32px rgba(167, 139, 250, 0.6);
+  }
+}
+
+/* Accessibility Reduced Motion Toast */
+.ag-reduced-motion-toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-25px);
+  background: #064e3b;
+  color: #ecfdf5;
+  border: 1px solid #10b981;
+  padding: 10px 22px;
+  border-radius: var(--radius-pill);
+  font-size: 0.88rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25), 0 0 16px rgba(16, 185, 129, 0.35);
+  z-index: 10002;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.ag-reduced-motion-toast.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.ag-reduced-motion-toast .toast-icon {
+  font-size: 1.15rem;
+}
+
+/* Accessible Reduced-Motion Gentle Micro-Animation */
+@keyframes agReducedMotionPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(16, 163, 127, 0);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(16, 163, 127, 0);
+  }
+}
+
+.ag-reduced-pulse {
+  animation: agReducedMotionPulse 0.75s ease-in-out !important;
+}
+
+

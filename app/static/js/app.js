@@ -557,6 +557,7 @@ async function handleSendMessage() {
     if (data.success !== false) {
       appendAssistantMessage(data, true);
       loadSessions(); // refresh session list with latest turn
+      rewardTaskCompletion(currentLang === "hi" ? "AI कृषि सलाह तैयार!" : "AI Advice Generated!", 3000);
     } else {
       appendAssistantMessage({
         response: data.error || (currentLang === "hi" ? "सर्वर से उत्तर प्राप्त करने में त्रुटि।" : "Error receiving server response.")
@@ -692,7 +693,7 @@ function appendAssistantMessage(data, scroll = true) {
 
   msgDiv.innerHTML = `
     <div class="assistant-avatar">🌱</div>
-    <div class="assistant-card">
+    <div class="assistant-card floatable" data-anti-gravity>
       ${statusHtml}
       ${visionHtml}
       <div class="response-content">${formattedContent}</div>
@@ -805,6 +806,7 @@ window.searchWeatherModal = async function() {
 
     if (data.success) {
       liveWeatherCache = data;
+      rewardTaskCompletion(currentLang === "hi" ? "मौसम आंकड़े प्राप्त हुए!" : "Weather Forecast Loaded!", 2800);
       const curr = data.current;
       const isEn = currentLang === "en";
 
@@ -922,6 +924,7 @@ async function runDiseaseDetection(file) {
     const isEn = currentLang === "en";
 
     if (data.success) {
+      rewardTaskCompletion(currentLang === "hi" ? "फसल रोग निदान पूर्ण!" : "Leaf Disease Diagnosed!", 3200);
       const dName = isEn ? data.disease_name_en : data.disease_name_hindi;
       const cName = isEn ? data.crop_en : data.crop;
       const symptoms = isEn ? data.symptoms_en : data.symptoms;
@@ -1016,6 +1019,7 @@ function setupSoilModal() {
       const data = await res.json();
 
       if (data.health_score !== undefined) {
+        rewardTaskCompletion(currentLang === "hi" ? "मृदा स्वास्थ्य विश्लेषित!" : "Soil Analysis Complete!", 3000);
         const defs = isEn ? data.deficiencies_en : data.deficiencies;
         const summary = isEn ? data.english_summary : data.hindi_summary;
 
@@ -1097,6 +1101,7 @@ function setupCropModal() {
       const data = await res.json();
 
       if (data.top_recommendations && data.top_recommendations.length > 0) {
+        rewardTaskCompletion(currentLang === "hi" ? "फसल चयन AI पूर्ण!" : "Crop Recommendations Ready!", 3000);
         const cardsHtml = data.top_recommendations.map((c, idx) => {
           const cropTitle = isEn ? `${c.crop_key.toUpperCase()} (${c.hindi_name})` : c.hindi_name;
           return `
@@ -1148,6 +1153,7 @@ window.searchSchemesModal = async function() {
     const isEn = currentLang === "en";
 
     if (data.schemes && data.schemes.length > 0) {
+      rewardTaskCompletion(currentLang === "hi" ? "योजनाएं खोजी गईं!" : "Schemes Discovered!", 2500);
       content.innerHTML = data.schemes.map((s) => `
         <div style="background:#ffffff; border:1px solid #e0e0e0; border-radius:10px; padding:14px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.03);">
           <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f0f0f0; padding-bottom:6px; margin-bottom:8px;">
@@ -1231,6 +1237,7 @@ function setupProfileModal() {
 
       if (status) {
         status.innerHTML = `<div style="color:#2e7d32; font-weight:600;">${isEn ? '✅ Profile updated successfully!' : '✅ प्रोफाइल सफलतापूर्वक सुरक्षित हुई!'}</div>`;
+        rewardTaskCompletion(currentLang === "hi" ? "प्रोफाइल सुरक्षित!" : "Profile Saved!", 2500);
         setTimeout(() => { status.innerHTML = ""; }, 3000);
       }
 
@@ -1261,3 +1268,76 @@ function escapeJsString(str) {
   if (!str) return "";
   return str.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$/g, "\\$").replace(/"/g, '\\"');
 }
+
+// ==========================================
+// Interactive Zero-Gravity Physics Setup & Reward Loop
+// ==========================================
+let antigravity = null;
+
+function rewardTaskCompletion(reason, durationMs = 3000) {
+  if (window.antigravity && typeof window.antigravity.triggerBurst === "function") {
+    window.antigravity.triggerBurst({ reason, durationMs });
+  } else if (typeof window.triggerAntiGravityBurst === "function") {
+    window.triggerAntiGravityBurst({ reason, durationMs });
+  } else {
+    window.dispatchEvent(new CustomEvent("antigravity:burst", { detail: { reason, durationMs } }));
+  }
+}
+window.rewardTaskCompletion = rewardTaskCompletion;
+
+document.addEventListener("DOMContentLoaded", () => {
+  if (typeof AntiGravityEngine !== "undefined") {
+    antigravity = new AntiGravityEngine({
+      selector: '.floatable, [data-anti-gravity], .starter-card, .tool-link-btn, .pill-btn, .weather-pill, .model-badge, .user-profile-widget, .new-chat-btn, .assistant-card, .modal-dialog',
+      gravity: -0.08,
+      damping: 0.988,
+      elasticity: 0.8,
+      repulsionRadius: 190,
+      repulsionStrength: 500,
+      enableDrag: true,
+      burstDurationMs: 3000,
+      onToggle: (active) => {
+        const toggleBtn = document.getElementById("zero-g-toggle-btn");
+        const statusBanner = document.getElementById("zero-g-status-banner");
+        const btnText = document.getElementById("zero-g-btn-text");
+
+        if (toggleBtn) {
+          toggleBtn.classList.toggle("active", active);
+        }
+        if (statusBanner && !active) {
+          statusBanner.classList.remove("visible", "ag-reward-burst");
+        } else if (statusBanner && active && !statusBanner.classList.contains("ag-reward-burst")) {
+          statusBanner.classList.add("visible");
+        }
+        if (btnText) {
+          btnText.innerText = active ? "Landing Mode" : "Zero-G Mode";
+        }
+      }
+    });
+
+    window.antigravity = antigravity;
+
+    // Attach click handler to navbar toggle button
+    const toggleBtn = document.getElementById("zero-g-toggle-btn");
+    if (toggleBtn) {
+      toggleBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        antigravity.toggle();
+      });
+    }
+
+    // Keyboard shortcut trigger (Shift + G)
+    window.addEventListener("keydown", (e) => {
+      if (e.shiftKey && e.key.toLowerCase() === "g") {
+        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : "";
+        if (activeTag !== "input" && activeTag !== "textarea") {
+          e.preventDefault();
+          antigravity.toggle();
+        }
+      }
+    });
+  }
+});
+
+

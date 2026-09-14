@@ -11,6 +11,13 @@
 </head>
 <body>
 
+  <!-- Floating Anti-Gravity Status Banner -->
+  <div class="zero-g-status-banner" id="zero-g-status-banner">
+    <div class="status-dot"></div>
+    <span id="zero-g-status-text">🚀 Anti-Gravity Active! Move cursor to push elements or drag & throw. Press <strong>Shift + G</strong> to land.</span>
+    <button class="zero-g-status-close" onclick="window.antigravity && window.antigravity.disable()" title="लैंड करें (Landing)">✕</button>
+  </div>
+
   <!-- App Wrapper: Sidebar + Main Area -->
   <div class="app-layout">
     
@@ -87,7 +94,13 @@
         </div>
         
         <div class="top-nav-right">
-          <div class="weather-pill" id="top-weather-pill" onclick="openModal('modal-weather')" title="मौसम विवरण देखें">
+          <button class="zero-g-btn floatable" id="zero-g-toggle-btn" title="एंटी-ग्रेविटी मोड बदलें (Toggle Zero-G Mode - Press Shift+G)">
+            <span class="zero-g-icon">🚀</span>
+            <span id="zero-g-btn-text">Zero-G Mode</span>
+            <span class="zero-g-shortcut-hint">Shift+G</span>
+          </button>
+
+          <div class="weather-pill floatable" id="top-weather-pill" onclick="openModal('modal-weather')" title="मौसम विवरण देखें" data-anti-gravity>
             📍 <span id="top-weather-text">मौसम लोड हो रहा है...</span>
           </div>
 
@@ -115,22 +128,22 @@
 
             <!-- Starter Prompt Cards -->
             <div class="starter-cards-grid">
-              <div class="starter-card" onclick="triggerStarterPrompt('गेहूं में खाद की सही मात्रा और डालने का समय बताओ')">
+              <div class="starter-card floatable" data-anti-gravity onclick="triggerStarterPrompt('गेहूं में खाद की सही मात्रा और डालने का समय बताओ')">
                 <div class="starter-card-icon">💊</div>
                 <div class="starter-card-title" data-i18n="starter_1_title">गेहूं में खाद की मात्रा</div>
                 <div class="starter-card-desc" data-i18n="starter_1_desc">यूरिया, डीएपी और पोटाश का संतुलित शेड्यूल</div>
               </div>
-              <div class="starter-card" onclick="triggerStarterPrompt('पत्ते पीले पड़ रहे हैं और काले धब्बे हैं, क्या उपाय करें?')">
+              <div class="starter-card floatable" data-anti-gravity onclick="triggerStarterPrompt('पत्ते पीले पड़ रहे हैं और काले धब्बे हैं, क्या उपाय करें?')">
                 <div class="starter-card-icon">📸</div>
                 <div class="starter-card-title" data-i18n="starter_2_title">फसल रोग निदान</div>
                 <div class="starter-card-desc" data-i18n="starter_2_desc">पत्ती पर धब्बे, झुलसा या रतुआ का वैज्ञानिक उपचार</div>
               </div>
-              <div class="starter-card" onclick="triggerStarterPrompt('अगले 5 दिनों का मौसम और बारिश का पूर्वानुमान क्या है?')">
+              <div class="starter-card floatable" data-anti-gravity onclick="triggerStarterPrompt('अगले 5 दिनों का मौसम और बारिश का पूर्वानुमान क्या है?')">
                 <div class="starter-card-icon">🌦️</div>
                 <div class="starter-card-title" data-i18n="starter_3_title">मौसम व बारिश अलर्ट</div>
                 <div class="starter-card-desc" data-i18n="starter_3_desc">तापमान, वर्षा संभावना और स्प्रे अनुकूलता</div>
               </div>
-              <div class="starter-card" onclick="triggerStarterPrompt('PM-KISAN सम्मान निधि और फसल बीमा योजना (PMFBY) की जानकारी दो')">
+              <div class="starter-card floatable" data-anti-gravity onclick="triggerStarterPrompt('PM-KISAN सम्मान निधि और फसल बीमा योजना (PMFBY) की जानकारी दो')">
                 <div class="starter-card-icon">🏛️</div>
                 <div class="starter-card-title" data-i18n="starter_4_title">सरकारी किसान योजनाएं</div>
                 <div class="starter-card-desc" data-i18n="starter_4_desc">पीएम किसान, पीएमएफबीवाई और केसीसी आवेदन</div>
@@ -346,6 +359,7 @@
     </div>
   </div>
 
+  <script src="/js/AntiGravity.js"></script>
   <script src="/js/app.js"></script>
 </body>
 </html>
