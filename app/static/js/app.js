@@ -45,7 +45,7 @@ const STARTER_PROMPTS = {
 // ==========================================
 const I18N = {
   en: {
-    app_title: "Gemini — KrishiSaathi AI",
+    app_title: "KrishiSaathi AI (कृषि साथी) — Agricultural Advisory",
     new_chat: "New chat",
     search_chats: "Search chats",
     students: "Students",
@@ -55,14 +55,14 @@ const I18N = {
     notebooks: "Notebooks",
     new_notebook: "New notebook",
     recent: "Recent",
-    hero_headline: "Hi Prakhyat, what's the plan?",
-    hero_subtext: "Ask any question about crops, foliar disease, soil health card, weather or government schemes.",
+    hero_headline: "Welcome Farmer Friend! 🙏",
+    hero_subtext: "I am your AI KrishiSaathi assistant. Ask any question about your crops, fertilizer, pests, weather or government schemes via text, voice, or leaf photos.",
     starter_1_title: "Wheat Fertilizer Schedule",
     starter_2_title: "Leaf Disease Diagnosis",
     starter_3_title: "Weather & Rain Forecast",
     starter_4_title: "PM-KISAN & PMFBY Schemes",
-    chat_placeholder: "Ask Gemini",
-    footer_disclaimer: "Gemini displays ICAR scientific guidelines. Check local agro-weather before chemical application.",
+    chat_placeholder: "Ask KrishiSaathi...",
+    footer_disclaimer: "KrishiSaathi displays ICAR scientific guidelines. Check local agro-weather before chemical application.",
     listen_btn: "🔊 Listen",
     stop_audio_btn: "⏹️ Stop",
     copy_btn: "📋 Copy",
@@ -73,7 +73,7 @@ const I18N = {
     empty_history: "No previous conversations."
   },
   hi: {
-    app_title: "Gemini — कृषि साथी AI",
+    app_title: "कृषि साथी (KrishiSaathi) — बहुआयामी AI कृषि सलाहकार",
     new_chat: "नया संवाद",
     search_chats: "संवाद खोजें",
     students: "कृषि छात्र (Students)",
@@ -83,14 +83,14 @@ const I18N = {
     notebooks: "नोटबुक्स",
     new_notebook: "नई नोटबुक",
     recent: "हालिया संवाद",
-    hero_headline: "नमस्ते प्रख्यात, आज का क्या प्लान है?",
-    hero_subtext: "फसल, पत्ती रोग, मृदा स्वास्थ्य कार्ड, मौसम या सरकारी योजनाओं के बारे में कोई भी प्रश्न पूछें।",
+    hero_headline: "Welcome Farmer Friend! 🙏",
+    hero_subtext: "मैं आपका AI कृषि साथी सहायक हूँ। अपनी फसल, खाद, कीट-रोग, मौसम या सरकारी योजनाओं के बारे में लिखकर, बोलकर या पत्ती की फोटो भेजकर पूछें।",
     starter_1_title: "गेहूं में खाद का शेड्यूल",
     starter_2_title: "पत्ती रोग निदान (YOLO)",
     starter_3_title: "मौसम व बारिश अलर्ट",
     starter_4_title: "पीएम किसान व फसल बीमा",
-    chat_placeholder: "Gemini से पूछें...",
-    footer_disclaimer: "Gemini भारतीय कृषि अनुसंधान परिषद (ICAR) संस्तुतियों पर आधारित है। रासायनिक छिड़काव से पूर्व मौसम अनुकूलता जांचें।",
+    chat_placeholder: "कृषि साथी से पूछें...",
+    footer_disclaimer: "कृषि साथी भारतीय कृषि अनुसंधान परिषद (ICAR) संस्तुतियों पर आधारित है। रासायनिक छिड़काव से पूर्व मौसम अनुकूलता जांचें।",
     listen_btn: "🔊 सुनो",
     stop_audio_btn: "⏹️ रोकें",
     copy_btn: "📋 कॉपी",
@@ -118,6 +118,7 @@ if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
 // DOM Initialization
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
+  initTheme();
   initLanguageSwitcher();
   initSidebar();
   initPlusMenu();
@@ -131,6 +132,28 @@ document.addEventListener("DOMContentLoaded", () => {
   loadNotebooks();
   loadCurrentSessionHistory();
 });
+
+// ==========================================
+// Theme Switching (Light / Dark Mode)
+// ==========================================
+function initTheme() {
+  const toggleBtn = document.getElementById("theme-toggle-btn");
+  const icon = document.getElementById("theme-toggle-icon");
+  const savedTheme = localStorage.getItem("ks_theme");
+
+  if (savedTheme === "light") {
+    document.body.classList.add("light-theme");
+    if (icon) icon.innerText = "🌙";
+  }
+
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", () => {
+      const isLight = document.body.classList.toggle("light-theme");
+      localStorage.setItem("ks_theme", isLight ? "light" : "dark");
+      if (icon) icon.innerText = isLight ? "🌙" : "☀️";
+    });
+  }
+}
 
 // ==========================================
 // Language Switching & Localization
@@ -172,6 +195,9 @@ function applyLanguage(lang) {
 
   const headline = document.getElementById("hero-headline");
   if (headline) headline.innerText = dict.hero_headline;
+
+  const subtext = document.getElementById("hero-subtext");
+  if (subtext) subtext.innerText = dict.hero_subtext;
 }
 
 // ==========================================
@@ -226,7 +252,7 @@ function initSidebar() {
       currentAppMode = "spark";
       sparkBtn.classList.add("active");
       chatBtn.classList.remove("active");
-      document.getElementById("hero-headline").innerText = currentLang === "hi" ? "✨ Gemini Spark: उन्नत कृषि अनुसंधान व विश्लेषण" : "✨ Gemini Spark: Advanced Agronomic Deep Research";
+      document.getElementById("hero-headline").innerText = currentLang === "hi" ? "✨ KrishiSaathi Spark: उन्नत कृषि अनुसंधान व विश्लेषण" : "✨ KrishiSaathi Spark: Advanced Agronomic Deep Research";
     });
   }
 }
@@ -361,7 +387,7 @@ function initModelPicker() {
     }
   });
 
-  selectModel(currentModel, currentModel === "Flash" ? "Gemini 2.0 Flash" : "Gemini 1.5 Pro");
+  selectModel(currentModel, currentModel === "Flash" ? "KrishiSaathi Flash" : "KrishiSaathi Pro");
 }
 
 window.selectModel = function(modelKey, displayName) {
@@ -1006,14 +1032,19 @@ function appendLoadingBubble(id) {
   loadDiv.id = id;
 
   loadDiv.innerHTML = `
-    <div class="assistant-avatar-sparkle">
-      <svg viewBox="0 0 28 28" width="22" height="22">
-        <path d="M14 0 C14 7.73 7.73 14 0 14 C7.73 14 14 20.27 14 28 C14 20.27 20.27 14 28 14 C20.27 14 14 7.73 14 0 Z" fill="url(#sparkleGrad)" />
+    <div class="assistant-avatar-emblem">
+      <svg viewBox="0 0 32 32" width="24" height="24">
+        <circle cx="16" cy="16" r="15" fill="#e8f9f0" stroke="#86efac" stroke-width="1.2" />
+        <path d="M12 23 C12 17 10 13 8 11" stroke="#10b981" stroke-width="2" stroke-linecap="round" fill="none" />
+        <path d="M15 24 V9" stroke="#059669" stroke-width="2.2" stroke-linecap="round" />
+        <path d="M18 24 C18 18 20 14 23 12" stroke="#047857" stroke-width="2" stroke-linecap="round" fill="none" />
+        <path d="M15 10 H8 M15 14 H9 M15 18 H9" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" />
+        <path d="M15 8 H21 M15 12 H22 M15 16 H21" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" />
       </svg>
     </div>
     <div class="assistant-card">
       <div style="color:#8e918f; font-style:italic;">
-        <span style="color:#4285f4;">● ● ●</span> Gemini is analyzing agricultural guidelines...
+        <span style="color:#10b981;">● ● ●</span> KrishiSaathi is analyzing agricultural guidelines...
       </div>
     </div>
   `;
@@ -1085,9 +1116,14 @@ function appendAssistantMessage(data, scroll = true) {
   `;
 
   msgDiv.innerHTML = `
-    <div class="assistant-avatar-sparkle">
-      <svg viewBox="0 0 28 28" width="22" height="22">
-        <path d="M14 0 C14 7.73 7.73 14 0 14 C7.73 14 14 20.27 14 28 C14 20.27 20.27 14 28 14 C20.27 14 14 7.73 14 0 Z" fill="url(#sparkleGrad)" />
+    <div class="assistant-avatar-emblem">
+      <svg viewBox="0 0 32 32" width="24" height="24">
+        <circle cx="16" cy="16" r="15" fill="#e8f9f0" stroke="#86efac" stroke-width="1.2" />
+        <path d="M12 23 C12 17 10 13 8 11" stroke="#10b981" stroke-width="2" stroke-linecap="round" fill="none" />
+        <path d="M15 24 V9" stroke="#059669" stroke-width="2.2" stroke-linecap="round" />
+        <path d="M18 24 C18 18 20 14 23 12" stroke="#047857" stroke-width="2" stroke-linecap="round" fill="none" />
+        <path d="M15 10 H8 M15 14 H9 M15 18 H9" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" />
+        <path d="M15 8 H21 M15 12 H22 M15 16 H21" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" />
       </svg>
     </div>
     <div class="assistant-card">
@@ -1410,7 +1446,7 @@ async function runDiseaseDetection(file) {
 
           <div style="margin-top:14px; display:flex; justify-content:flex-end; gap:8px;">
             <button class="gemini-btn-primary" style="padding:6px 14px; font-size:0.84rem;" onclick="closeModal('modal-disease'); triggerStarterPrompt('${escapeJsString('Tell me more about treating ' + dName + ' in ' + cName)}')">
-              💬 Ask Gemini About This
+              💬 Ask KrishiSaathi About This
             </button>
           </div>
         </div>
