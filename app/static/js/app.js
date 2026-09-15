@@ -12,6 +12,30 @@ let currentFarmerId = "default_farmer";
 let currentLang = localStorage.getItem("ks_current_lang") || "hi";
 let liveWeatherCache = null;
 let attachedChatFile = null;
+let currentSpeakingUtterance = null;
+let activeTtsButton = null;
+
+// ==========================================
+// Starter Prompts Bilingual Catalog
+// ==========================================
+const STARTER_PROMPTS = {
+  starter_1: {
+    hi: "गेहूं में खाद की सही मात्रा और डालने का समय बताओ",
+    en: "What is the recommended fertilizer schedule for wheat crop?"
+  },
+  starter_2: {
+    hi: "पत्ते पीले पड़ रहे हैं और काले धब्बे हैं, क्या उपाय करें?",
+    en: "Leaves are turning yellow with dark spots, how to treat?"
+  },
+  starter_3: {
+    hi: "अगले 5 दिनों का मौसम और बारिश का पूर्वानुमान क्या है?",
+    en: "What is the 5-day weather and rainfall forecast?"
+  },
+  starter_4: {
+    hi: "PM-KISAN सम्मान निधि और फसल बीमा योजना (PMFBY) की जानकारी दो",
+    en: "Give details about PM-KISAN and PMFBY crop insurance schemes"
+  }
+};
 
 // ==========================================
 // Bilingual i18n Dictionaries
@@ -44,13 +68,56 @@ const I18N = {
     assistant: "कृषि साथी",
     loading_msg: "🌾 कृषि साथी सोच रहा है... (मौसम, YOLO विज़न व ICAR ज्ञानकोश जांच जारी)",
     listen_btn: "🔊 सुनो",
+    stop_audio_btn: "⏹️ रोकें",
+    copy_btn: "📋 कॉपी करें",
     confidence: "विश्वास स्कोर",
     foliar_damage: "संक्रमण",
     citations_title: "📚 प्रामाणिक कृषि संदर्भ (ICAR / KVK / CIBRC):",
     confirm_delete: "क्या आप वाकई इस चैट को हटाना चाहते हैं?",
     empty_history: "कोई पुराना संवाद नहीं मिला।",
     weather_loading: "मौसम लोड हो रहा है...",
-    no_active_disease: "स्वस्थ पत्ती अथवा कोई गंभीर लक्षण नहीं पाया गया।"
+    no_active_disease: "स्वस्थ पत्ती अथवा कोई गंभीर लक्षण नहीं पाया गया।",
+    modal_disease_title: "📸 फसल रोग एवं पत्ती स्वास्थ्य जांच (AI Vision)",
+    modal_disease_intro: "पौधे की पत्ती की स्पष्ट फोटो अपलोड करें। हमारा YOLO विज़न मॉडल रोग के लक्षणों को पहचान कर सुरक्षित उपचार सुझाएगा।",
+    modal_disease_crop_label: "संबंधित फसल (वैकल्पिक):",
+    modal_disease_autodetect: "स्वचालित पहचान (Auto Detect)",
+    modal_disease_dropzone: "यहाँ पत्ते की फोटो खींचकर छोड़ें या क्लिक करके अपलोड करें",
+    modal_soil_title: "🧪 मृदा स्वास्थ्य कार्ड विश्लेषण एवं KVK लैब खोजक",
+    soil_ph: "पीएच मान (pH):",
+    soil_oc: "जैविक कार्बन (OC %):",
+    soil_n: "नाइट्रोजन (N kg/ha):",
+    soil_p: "फॉस्फोरस (P kg/ha):",
+    soil_k: "पोटाश (K kg/ha):",
+    soil_ec: "विद्युत चालकता (EC dS/m):",
+    soil_zn: "जिंक (Zn ppm):",
+    soil_s: "सल्फर (S ppm):",
+    soil_fe: "आयरन (Fe ppm):",
+    soil_state: "राज्य (State):",
+    soil_district: "जिला (District):",
+    btn_soil_submit: "🧪 मृदा स्वास्थ्य रिपोर्ट तैयार करें",
+    modal_crop_title: "🌱 फसल चयन सलाहकार (Crop ML Engine)",
+    crop_n: "नाइट्रोजन (N):",
+    crop_p: "फॉस्फोरस (P):",
+    crop_k: "पोटाश (K):",
+    crop_temp: "तापमान (°C):",
+    crop_humidity: "हवा में नमी (%):",
+    crop_ph: "पीएच मान (pH):",
+    crop_rainfall: "अनुमानित वर्षा (mm):",
+    crop_month: "बुवाई का माह (Month):",
+    btn_crop_submit: "🌱 श्रेष्ठ फसलों की गणना करें",
+    modal_weather_title: "🌦️ मौसम पूर्वानुमान एवं कृषि अलर्ट",
+    modal_schemes_title: "🏛️ सरकारी किसान कल्याण योजनाएं",
+    modal_profile_title: "👤 किसान प्रोफाइल प्रबंधन",
+    profile_name: "किसान का नाम:",
+    profile_village: "गांव / पंचायत:",
+    profile_district: "जिला:",
+    profile_state: "राज्य:",
+    profile_acres: "खेत का आकार (एकड़):",
+    profile_crop: "वर्तमान मुख्य फसल:",
+    profile_soil: "मिट्टी का प्रकार:",
+    profile_irrigation: "सिंचाई स्रोत:",
+    btn_profile_save: "💾 प्रोफाइल सहेजें (Save Profile)",
+    btn_search: "खोजें"
   },
   en: {
     app_title: "KrishiSaathi (Farmer Assistant)",
@@ -79,13 +146,56 @@ const I18N = {
     assistant: "KrishiSaathi",
     loading_msg: "🌾 KrishiSaathi is analyzing... (Checking weather, YOLO vision & ICAR guidelines)",
     listen_btn: "🔊 Listen",
+    stop_audio_btn: "⏹️ Stop",
+    copy_btn: "📋 Copy",
     confidence: "Confidence",
     foliar_damage: "Foliar Damage",
     citations_title: "📚 Verified Scientific Grounding (ICAR / KVK / CIBRC):",
     confirm_delete: "Are you sure you want to delete this chat session?",
     empty_history: "No previous chats found.",
     weather_loading: "Loading weather...",
-    no_active_disease: "Healthy leaf or no severe pathogen detected."
+    no_active_disease: "Healthy leaf or no severe pathogen detected.",
+    modal_disease_title: "📸 Leaf Disease & Foliar Health (AI Vision)",
+    modal_disease_intro: "Upload a clear photo of the plant leaf. Our YOLO vision model will detect disease symptoms and suggest safe ICAR-approved remedies.",
+    modal_disease_crop_label: "Associated Crop (Optional):",
+    modal_disease_autodetect: "Auto Detect Crop",
+    modal_disease_dropzone: "Drop leaf photo here or click to upload",
+    modal_soil_title: "🧪 Soil Health Card Analysis & KVK Lab Finder",
+    soil_ph: "Soil pH Value:",
+    soil_oc: "Organic Carbon (OC %):",
+    soil_n: "Nitrogen (N kg/ha):",
+    soil_p: "Phosphorus (P kg/ha):",
+    soil_k: "Potash (K kg/ha):",
+    soil_ec: "Electrical Cond. (EC dS/m):",
+    soil_zn: "Zinc (Zn ppm):",
+    soil_s: "Sulphur (S ppm):",
+    soil_fe: "Iron (Fe ppm):",
+    soil_state: "State:",
+    soil_district: "District:",
+    btn_soil_submit: "🧪 Generate Soil Health Report",
+    modal_crop_title: "🌱 Crop Selection Advisor (Crop ML Engine)",
+    crop_n: "Nitrogen (N):",
+    crop_p: "Phosphorus (P):",
+    crop_k: "Potash (K):",
+    crop_temp: "Temperature (°C):",
+    crop_humidity: "Relative Humidity (%):",
+    crop_ph: "Soil pH:",
+    crop_rainfall: "Expected Rainfall (mm):",
+    crop_month: "Sowing Month:",
+    btn_crop_submit: "🌱 Calculate Optimal Crops",
+    modal_weather_title: "🌦️ Weather Forecast & Agro Advisories",
+    modal_schemes_title: "🏛️ Government Farmer Welfare Schemes",
+    modal_profile_title: "👤 Farmer Profile Management",
+    profile_name: "Farmer Name:",
+    profile_village: "Village / Panchayat:",
+    profile_district: "District:",
+    profile_state: "State:",
+    profile_acres: "Farm Size (Acres):",
+    profile_crop: "Primary Current Crop:",
+    profile_soil: "Soil Type:",
+    profile_irrigation: "Irrigation Source:",
+    btn_profile_save: "💾 Save Profile",
+    btn_search: "Search"
   }
 };
 
@@ -164,36 +274,38 @@ function initSidebarToggle() {
   const openBtn = document.getElementById("sidebar-open-btn");
   const closeBtn = document.getElementById("sidebar-close-btn");
   const newChatBtn = document.getElementById("new-chat-btn");
+  const backdrop = document.getElementById("sidebar-backdrop");
 
-  if (openBtn && sidebar) {
-    openBtn.addEventListener("click", () => {
-      sidebar.classList.add("open");
-    });
+  function openSidebar() {
+    if (sidebar) sidebar.classList.add("open");
+    if (backdrop) backdrop.classList.add("active");
   }
 
-  if (closeBtn && sidebar) {
-    closeBtn.addEventListener("click", () => {
-      sidebar.classList.remove("open");
-    });
+  function closeSidebar() {
+    if (sidebar) sidebar.classList.remove("open");
+    if (backdrop) backdrop.classList.remove("active");
+  }
+
+  if (openBtn) {
+    openBtn.addEventListener("click", openSidebar);
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closeSidebar);
+  }
+
+  if (backdrop) {
+    backdrop.addEventListener("click", closeSidebar);
   }
 
   if (newChatBtn) {
     newChatBtn.addEventListener("click", () => {
       startNewChat();
-      if (window.innerWidth <= 768 && sidebar) {
-        sidebar.classList.remove("open");
+      if (window.innerWidth <= 768) {
+        closeSidebar();
       }
     });
   }
-
-  // Close sidebar when clicking outside on mobile
-  document.addEventListener("click", (e) => {
-    if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains("open")) {
-      if (!sidebar.contains(e.target) && e.target !== openBtn) {
-        sidebar.classList.remove("open");
-      }
-    }
-  });
 }
 
 // ==========================================
@@ -226,8 +338,10 @@ async function loadSessions() {
           if (e.target.closest(".session-delete-btn")) return;
           switchSession(s.session_id);
           const sidebar = document.getElementById("sidebar");
+          const backdrop = document.getElementById("sidebar-backdrop");
           if (window.innerWidth <= 768 && sidebar) {
             sidebar.classList.remove("open");
+            if (backdrop) backdrop.classList.remove("active");
           }
         });
 
@@ -235,7 +349,7 @@ async function loadSessions() {
       });
     } else {
       const dict = I18N[currentLang] || I18N.hi;
-      container.innerHTML = `<div style="font-size:0.8rem; color:#777; padding: 10px 12px;">${dict.empty_history}</div>`;
+      container.innerHTML = `<div style="font-size:0.8rem; color:#888; padding: 10px 12px;">${dict.empty_history}</div>`;
     }
   } catch (err) {
     console.error("Error loading chat sessions:", err);
@@ -337,7 +451,12 @@ async function loadCurrentSessionHistory() {
 // ==========================================
 // Starter Prompt Cards Trigger
 // ==========================================
-window.triggerStarterPrompt = function(promptText) {
+window.triggerStarterPrompt = function(promptKeyOrText) {
+  let promptText = promptKeyOrText;
+  if (STARTER_PROMPTS[promptKeyOrText]) {
+    promptText = STARTER_PROMPTS[promptKeyOrText][currentLang] || STARTER_PROMPTS[promptKeyOrText].hi;
+  }
+
   const textarea = document.getElementById("chat-textarea");
   if (textarea) {
     textarea.value = promptText;
@@ -388,7 +507,7 @@ function initChatInput() {
 
 function adjustTextareaHeight(el) {
   el.style.height = "auto";
-  el.style.height = Math.min(el.scrollHeight, 180) + "px";
+  el.style.height = Math.min(el.scrollHeight, 160) + "px";
 }
 
 function displayAttachmentPreview(file) {
@@ -441,7 +560,11 @@ function initVoice() {
     } else {
       micBtn.classList.add("recording");
       recognition.lang = currentLang === "hi" ? "hi-IN" : "en-IN";
-      recognition.start();
+      try {
+        recognition.start();
+      } catch (e) {
+        micBtn.classList.remove("recording");
+      }
     }
   });
 
@@ -465,15 +588,31 @@ function initVoice() {
 }
 
 // ==========================================
-// Text to Speech (TTS)
+// Text to Speech (TTS) & Copy
 // ==========================================
-window.speakText = function(text) {
+window.speakText = function(text, btnElement) {
   if (!("speechSynthesis" in window)) {
     alert(currentLang === "hi" ? "ब्राउज़र में आवाज़ समर्थित नहीं है।" : "Speech playback is not supported in this browser.");
     return;
   }
 
+  // If already speaking the same message, toggle to pause/stop
+  if (window.speechSynthesis.speaking && activeTtsButton === btnElement) {
+    window.speechSynthesis.cancel();
+    if (activeTtsButton) {
+      activeTtsButton.classList.remove("active-playing");
+      activeTtsButton.innerText = I18N[currentLang].listen_btn;
+      activeTtsButton = null;
+    }
+    return;
+  }
+
   window.speechSynthesis.cancel();
+  if (activeTtsButton) {
+    activeTtsButton.classList.remove("active-playing");
+    activeTtsButton.innerText = I18N[currentLang].listen_btn;
+  }
+
   const cleanText = text.replace(/[*#•`_]/g, "").replace(/\n+/g, " ");
   const utterance = new SpeechSynthesisUtterance(cleanText);
   utterance.lang = currentLang === "hi" ? "hi-IN" : "en-IN";
@@ -484,7 +623,47 @@ window.speakText = function(text) {
   const matchedVoice = voices.find((v) => v.lang.startsWith(targetCode));
   if (matchedVoice) utterance.voice = matchedVoice;
 
+  if (btnElement) {
+    activeTtsButton = btnElement;
+    btnElement.classList.add("active-playing");
+    btnElement.innerText = I18N[currentLang].stop_audio_btn;
+  }
+
+  utterance.onend = () => {
+    if (activeTtsButton) {
+      activeTtsButton.classList.remove("active-playing");
+      activeTtsButton.innerText = I18N[currentLang].listen_btn;
+      activeTtsButton = null;
+    }
+  };
+
+  utterance.onerror = () => {
+    if (activeTtsButton) {
+      activeTtsButton.classList.remove("active-playing");
+      activeTtsButton.innerText = I18N[currentLang].listen_btn;
+      activeTtsButton = null;
+    }
+  };
+
   window.speechSynthesis.speak(utterance);
+};
+
+window.copyMessageText = async function(text, btnElement) {
+  try {
+    await navigator.clipboard.writeText(text);
+    if (btnElement) {
+      const originalText = btnElement.innerText;
+      const feedback = currentLang === "hi" ? "✓ कॉपीड!" : "✓ Copied!";
+      btnElement.innerText = feedback;
+      btnElement.style.color = "#059669";
+      setTimeout(() => {
+        btnElement.innerText = originalText;
+        btnElement.style.color = "";
+      }, 2000);
+    }
+  } catch (err) {
+    console.error("Failed to copy text:", err);
+  }
 };
 
 // ==========================================
@@ -635,7 +814,7 @@ function appendAssistantMessage(data, scroll = true) {
   const msgDiv = document.createElement("div");
   msgDiv.className = "message-row assistant-row";
 
-  // Reassuring status pills (Zero raw CoT)
+  // Reassuring status pills
   let statusHtml = "";
   if (data.status_badges && data.status_badges.length > 0) {
     statusHtml = `
@@ -682,10 +861,14 @@ function appendAssistantMessage(data, scroll = true) {
     `;
   }
 
-  // Text-To-Speech Action Button
-  const ttsHtml = `
+  // Message Action Buttons (Copy & Listen)
+  const escapedResp = escapeJsString(data.response || '');
+  const actionsHtml = `
     <div class="card-footer-actions">
-      <button class="action-btn tts-btn" onclick="speakText(\`${escapeJsString(data.response || '')}\`)">
+      <button class="action-btn copy-btn" onclick="copyMessageText(\`${escapedResp}\`, this)" title="कॉपी करें / Copy advisory">
+        ${dict.copy_btn}
+      </button>
+      <button class="action-btn tts-btn" onclick="speakText(\`${escapedResp}\`, this)" title="बोलकर सुनें / Listen">
         ${dict.listen_btn}
       </button>
     </div>
@@ -698,7 +881,7 @@ function appendAssistantMessage(data, scroll = true) {
       ${visionHtml}
       <div class="response-content">${formattedContent}</div>
       ${citationsHtml}
-      ${ttsHtml}
+      ${actionsHtml}
     </div>
   `;
 
@@ -713,17 +896,99 @@ function scrollToBottom() {
   }
 }
 
+/**
+ * Robust, clean Markdown parser supporting headers, bold/italic, lists (ul/ol), blockquotes and inline code.
+ */
 function renderMarkdown(text) {
   if (!text) return "";
-  let html = escapeHtml(text)
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.*?)\*/g, "<em>$1</em>")
-    .replace(/^### (.*$)/gim, '<h4 style="color:#2e7d32; margin:8px 0 4px 0;">$1</h4>')
-    .replace(/^## (.*$)/gim, '<h3 style="color:#1b5e20; margin:10px 0 6px 0;">$1</h3>')
-    .replace(/^# (.*$)/gim, '<h2 style="color:#1b5e20; margin:12px 0 8px 0;">$1</h2>')
-    .replace(/`([^`]+)`/g, '<code style="background:#e8f5e9; padding:2px 4px; border-radius:4px;">$1</code>')
-    .replace(/\n/g, "<br>");
-  return html;
+
+  const lines = text.split("\n");
+  const result = [];
+  let inUl = false;
+  let inOl = false;
+
+  function closeLists() {
+    if (inUl) {
+      result.push("</ul>");
+      inUl = false;
+    }
+    if (inOl) {
+      result.push("</ol>");
+      inOl = false;
+    }
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i];
+    const trimmed = rawLine.trim();
+
+    if (!trimmed) {
+      closeLists();
+      continue;
+    }
+
+    // Unordered List item: starts with * or - or •
+    const ulMatch = trimmed.match(/^[\*\-\•]\s+(.*)$/);
+    if (ulMatch) {
+      if (inOl) {
+        result.push("</ol>");
+        inOl = false;
+      }
+      if (!inUl) {
+        result.push("<ul>");
+        inUl = true;
+      }
+      result.push(`<li>${formatInline(ulMatch[1])}</li>`);
+      continue;
+    }
+
+    // Ordered List item: starts with 1. 2. etc.
+    const olMatch = trimmed.match(/^\d+\.\s+(.*)$/);
+    if (olMatch) {
+      if (inUl) {
+        result.push("</ul>");
+        inUl = false;
+      }
+      if (!inOl) {
+        result.push("<ol>");
+        inOl = true;
+      }
+      result.push(`<li>${formatInline(olMatch[1])}</li>`);
+      continue;
+    }
+
+    // Not a list line, close any open list
+    closeLists();
+
+    // Headers
+    if (trimmed.startsWith("### ")) {
+      result.push(`<h4>${formatInline(trimmed.substring(4))}</h4>`);
+    } else if (trimmed.startsWith("## ")) {
+      result.push(`<h3>${formatInline(trimmed.substring(3))}</h3>`);
+    } else if (trimmed.startsWith("# ")) {
+      result.push(`<h2>${formatInline(trimmed.substring(2))}</h2>`);
+    } else if (trimmed.startsWith("> ")) {
+      result.push(`<blockquote>${formatInline(trimmed.substring(2))}</blockquote>`);
+    } else {
+      result.push(`<p>${formatInline(trimmed)}</p>`);
+    }
+  }
+
+  closeLists();
+  return result.join("");
+}
+
+function formatInline(str) {
+  if (!str) return "";
+  let s = escapeHtml(str);
+  // Bold **text**
+  s = s.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  // Italic *text* or _text_
+  s = s.replace(/\*([^\*\s][^\*]*?)\*/g, "<em>$1</em>");
+  s = s.replace(/_([^_\s][^_]*?)_/g, "<em>$1</em>");
+  // Inline code `code`
+  s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+  return s;
 }
 
 // ==========================================
@@ -733,6 +998,7 @@ window.openModal = function(modalId) {
   const modal = document.getElementById(modalId);
   if (!modal) return;
   modal.classList.add("active");
+  document.body.classList.add("modal-open");
 
   // Specific on-open triggers
   if (modalId === "modal-weather") {
@@ -745,6 +1011,7 @@ window.openModal = function(modalId) {
 window.closeModal = function(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.classList.remove("active");
+  document.body.classList.remove("modal-open");
 };
 
 function initModals() {
@@ -753,6 +1020,7 @@ function initModals() {
     overlay.addEventListener("click", (e) => {
       if (e.target === overlay) {
         overlay.classList.remove("active");
+        document.body.classList.remove("modal-open");
       }
     });
   });
@@ -763,6 +1031,7 @@ function initModals() {
       document.querySelectorAll(".modal-overlay.active").forEach((m) => {
         m.classList.remove("active");
       });
+      document.body.classList.remove("modal-open");
     }
   });
 
@@ -798,7 +1067,7 @@ window.searchWeatherModal = async function() {
   const district = (input && input.value.trim()) || "Lucknow";
 
   if (!content) return;
-  content.innerHTML = `<div style="text-align:center; padding: 20px;">🌦️ ${currentLang === 'hi' ? 'मौसम आंकड़े प्राप्त किए जा रहे हैं...' : 'Fetching meteorological forecast...'}</div>`;
+  content.innerHTML = `<div style="text-align:center; padding: 24px; color: #059669;">🌦️ ${currentLang === 'hi' ? 'मौसम आंकड़े प्राप्त किए जा रहे हैं...' : 'Fetching meteorological forecast...'}</div>`;
 
   try {
     const res = await fetch(`/api/weather?district=${encodeURIComponent(district)}`);
@@ -813,9 +1082,9 @@ window.searchWeatherModal = async function() {
       let advisoriesHtml = "";
       if (data.agricultural_advisories && data.agricultural_advisories.length > 0) {
         advisoriesHtml = data.agricultural_advisories.map((a) => `
-          <div style="background:#f1f8e9; border-left:4px solid #2e7d32; padding:10px; border-radius:6px; margin-bottom:8px;">
-            <strong style="color:#1b5e20;">${a.title}</strong><br>
-            <span style="font-size:0.9rem;">${a.advice}</span>
+          <div style="background:#f0fdf4; border-left:4px solid #059669; padding:12px; border-radius:8px; margin-bottom:10px;">
+            <strong style="color:#064e3b; font-size:0.95rem;">${a.title}</strong><br>
+            <span style="font-size:0.9rem; color:#1e293b; line-height:1.5;">${a.advice}</span>
           </div>
         `).join("");
       }
@@ -823,13 +1092,13 @@ window.searchWeatherModal = async function() {
       let forecastHtml = "";
       if (data.forecast) {
         forecastHtml = `
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:8px; margin-top:10px;">
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:10px; margin-top:10px;">
             ${data.forecast.map((f) => `
-              <div style="background:#fafafa; border:1px solid #e0e0e0; border-radius:8px; padding:8px; text-align:center;">
-                <div style="font-size:0.8rem; color:#666;">${f.date}</div>
-                <div style="font-weight:700; color:#2e7d32; font-size:1.05rem; margin:3px 0;">${f.temp_max}° / ${f.temp_min}°</div>
-                <div style="font-size:0.75rem; color:#0288d1;">🌧️ ${f.rain_prob}% ${isEn ? 'Rain' : 'बारिश'}</div>
-                <div style="font-size:0.75rem; color:#555;">${f.condition}</div>
+              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 8px; text-align:center;">
+                <div style="font-size:0.8rem; color:#64748b; font-weight:500;">${f.date}</div>
+                <div style="font-weight:700; color:#059669; font-size:1.1rem; margin:4px 0;">${f.temp_max}° / ${f.temp_min}°</div>
+                <div style="font-size:0.78rem; color:#0284c7; font-weight:600;">🌧️ ${f.rain_prob}% ${isEn ? 'Rain' : 'बारिश'}</div>
+                <div style="font-size:0.75rem; color:#475569; margin-top:2px;">${f.condition}</div>
               </div>
             `).join("")}
           </div>
@@ -837,26 +1106,26 @@ window.searchWeatherModal = async function() {
       }
 
       content.innerHTML = `
-        <div style="background:#e8f5e9; border-radius:10px; padding:15px; display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <div style="background:linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-radius:12px; padding:18px; display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border:1px solid rgba(16,185,129,0.2);">
           <div>
-            <h3 style="color:#1b5e20; margin-bottom:4px;">${data.location}</h3>
-            <span style="font-size:0.85rem; color:#388e3c;">${isEn ? 'Source' : 'स्रोत'}: ${data.source}</span>
+            <h3 style="color:#064e3b; margin-bottom:4px; font-size:1.25rem;">${data.location}</h3>
+            <span style="font-size:0.85rem; color:#047857;">${isEn ? 'Source' : 'स्रोत'}: ${data.source}</span>
           </div>
           <div style="text-align:right;">
-            <div style="font-size:1.8rem; font-weight:800; color:#2e7d32;">${curr.temperature}°C</div>
-            <div style="font-size:0.82rem; color:#555;">${isEn ? 'Humidity' : 'नमी'}: ${curr.humidity}% | ${isEn ? 'Wind' : 'हवा'}: ${curr.wind_speed} km/h</div>
+            <div style="font-size:2rem; font-weight:800; color:#059669;">${curr.temperature}°C</div>
+            <div style="font-size:0.84rem; color:#475569;">${isEn ? 'Humidity' : 'नमी'}: ${curr.humidity}% | ${isEn ? 'Wind' : 'हवा'}: ${curr.wind_speed} km/h</div>
           </div>
         </div>
-        <h4 style="color:#1b5e20; margin-bottom:8px;">${isEn ? '🌾 Agricultural Weather Advisories' : '🌾 कृषि मौसम परामर्श'}</h4>
+        <h4 style="color:#064e3b; margin-bottom:10px;">${isEn ? '🌾 Agricultural Weather Advisories' : '🌾 कृषि मौसम परामर्श'}</h4>
         ${advisoriesHtml}
-        <h4 style="color:#1b5e20; margin-top:15px; margin-bottom:8px;">${isEn ? '📅 5-Day Forecast' : '📅 आगामी 5 दिनों का पूर्वानुमान'}</h4>
+        <h4 style="color:#064e3b; margin-top:16px; margin-bottom:10px;">${isEn ? '📅 5-Day Forecast' : '📅 आगामी 5 दिनों का पूर्वानुमान'}</h4>
         ${forecastHtml}
       `;
     } else {
-      content.innerHTML = `<div style="color:red; padding:10px;">${data.error || "Unable to load weather."}</div>`;
+      content.innerHTML = `<div style="color:#ef4444; padding:12px; background:#fef2f2; border-radius:8px;">${data.error || "Unable to load weather."}</div>`;
     }
   } catch (err) {
-    content.innerHTML = `<div style="color:red; padding:10px;">Error fetching weather data.</div>`;
+    content.innerHTML = `<div style="color:#ef4444; padding:12px;">Error fetching weather data.</div>`;
   }
 };
 
@@ -873,19 +1142,19 @@ function setupDiseaseModal() {
 
   dropzone.addEventListener("dragover", (e) => {
     e.preventDefault();
-    dropzone.style.borderColor = "#2e7d32";
-    dropzone.style.background = "#e8f5e9";
+    dropzone.style.borderColor = "#059669";
+    dropzone.style.background = "#ecfdf5";
   });
 
   dropzone.addEventListener("dragleave", () => {
-    dropzone.style.borderColor = "#c8e6c9";
-    dropzone.style.background = "#fafafa";
+    dropzone.style.borderColor = "#86efac";
+    dropzone.style.background = "#f8fbf9";
   });
 
   dropzone.addEventListener("drop", (e) => {
     e.preventDefault();
-    dropzone.style.borderColor = "#c8e6c9";
-    dropzone.style.background = "#fafafa";
+    dropzone.style.borderColor = "#86efac";
+    dropzone.style.background = "#f8fbf9";
     if (e.dataTransfer.files.length > 0) {
       runDiseaseDetection(e.dataTransfer.files[0]);
     }
@@ -904,7 +1173,7 @@ async function runDiseaseDetection(file) {
   const cropHint = cropSelect ? cropSelect.value : "";
 
   if (!resultArea) return;
-  resultArea.innerHTML = `<div style="text-align:center; padding:15px; color:#2e7d32;">📸 ${currentLang === 'hi' ? 'YOLO विज़न मॉडल पत्ती का विश्लेषण कर रहा है...' : 'YOLO Vision model is analyzing leaf symptoms...'}</div>`;
+  resultArea.innerHTML = `<div style="text-align:center; padding:20px; color:#059669;">📸 ${currentLang === 'hi' ? 'YOLO विज़न मॉडल पत्ती का विश्लेषण कर रहा है...' : 'YOLO Vision model is analyzing leaf symptoms...'}</div>`;
 
   const formData = new FormData();
   formData.append("file", file);
@@ -935,50 +1204,50 @@ async function runDiseaseDetection(file) {
       const kvkNote = isEn ? data.kvk_escalation_note_en : data.kvk_escalation_note;
 
       resultArea.innerHTML = `
-        <div style="background:#ffffff; border:1px solid #c8e6c9; border-radius:10px; padding:15px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:8px; margin-bottom:10px;">
+        <div style="background:#ffffff; border:1px solid #86efac; border-radius:12px; padding:18px; box-shadow:0 4px 16px rgba(0,0,0,0.05);">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:10px; margin-bottom:12px;">
             <div>
-              <h3 style="color:#1b5e20; margin-bottom:2px;">${escapeHtml(dName)}</h3>
-              <span style="font-size:0.85rem; color:#666;">${isEn ? 'Crop' : 'फसल'}: <strong>${escapeHtml(cName)}</strong></span>
+              <h3 style="color:#064e3b; margin-bottom:2px; font-size:1.15rem;">${escapeHtml(dName)}</h3>
+              <span style="font-size:0.86rem; color:#64748b;">${isEn ? 'Crop' : 'फसल'}: <strong style="color:#059669;">${escapeHtml(cName)}</strong></span>
             </div>
-            <span class="badge-pill" style="background:#e8f5e9; color:#2e7d32; font-weight:700;">
+            <span class="badge-pill" style="font-weight:700;">
               ${data.confidence_score}% ${isEn ? 'Confidence' : 'विश्वसनीयता'}
             </span>
           </div>
 
-          <p style="margin-bottom:6px;"><strong>🔍 ${isEn ? 'Symptoms' : 'लक्षण'}:</strong> ${escapeHtml(symptoms)}</p>
-          <p style="margin-bottom:6px;"><strong>⚡ ${isEn ? 'Immediate Action' : 'तत्काल उपाय'}:</strong> ${escapeHtml(action)}</p>
-          <p style="margin-bottom:8px;"><strong>🌿 ${isEn ? 'Organic & IPM' : 'जैविक समाधान'}:</strong> ${escapeHtml(organic)}</p>
+          <p style="margin-bottom:8px; font-size:0.92rem;"><strong>🔍 ${isEn ? 'Symptoms' : 'लक्षण'}:</strong> ${escapeHtml(symptoms)}</p>
+          <p style="margin-bottom:8px; font-size:0.92rem;"><strong>⚡ ${isEn ? 'Immediate Action' : 'तत्काल उपाय'}:</strong> ${escapeHtml(action)}</p>
+          <p style="margin-bottom:10px; font-size:0.92rem;"><strong>🌿 ${isEn ? 'Organic & IPM' : 'जैविक समाधान'}:</strong> ${escapeHtml(organic)}</p>
 
-          <div style="background:#fffde7; border-left:4px solid #fbc02d; padding:8px 12px; border-radius:6px; margin:10px 0; font-size:0.9rem;">
-            <strong>🧪 ${isEn ? 'Safe Chemical Spray' : 'संस्तुत रासायनिक उपचार'}:</strong><br>
+          <div style="background:#fefce8; border-left:4px solid #eab308; padding:10px 14px; border-radius:8px; margin:12px 0; font-size:0.9rem;">
+            <strong style="color:#854d0e;">🧪 ${isEn ? 'Safe Chemical Spray' : 'संस्तुत रासायनिक उपचार'}:</strong><br>
             • ${chem.name} | ${isEn ? 'Dose' : 'मात्रा'}: ${chem.dose}<br>
             • ${isEn ? 'Precaution' : 'सावधानी'}: ${chem.precaution}
           </div>
 
-          <div style="background:#e1f5fe; padding:8px 12px; border-radius:6px; font-size:0.85rem; color:#0277bd; margin-bottom:8px;">
+          <div style="background:#f0f9ff; border:1px solid #bae6fd; padding:10px 14px; border-radius:8px; font-size:0.86rem; color:#0369a1; margin-bottom:10px;">
             🌦️ ${sprayAdv}
           </div>
 
-          <div style="font-size:0.8rem; color:#c62828; border-top:1px dashed #ddd; padding-top:6px;">
+          <div style="font-size:0.82rem; color:#b91c1c; border-top:1px dashed #e2e8f0; padding-top:8px;">
             📞 ${kvkNote}
           </div>
 
-          <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px;">
-            <button class="action-btn tts-btn" onclick="speakText(\`${escapeJsString(dName + '. ' + symptoms + '. ' + action)}\`)">
+          <div style="margin-top:16px; display:flex; justify-content:flex-end; gap:10px;">
+            <button class="action-btn tts-btn" onclick="speakText(\`${escapeJsString(dName + '. ' + symptoms + '. ' + action)}\`, this)">
               ${isEn ? '🔊 Listen' : '🔊 सुनो'}
             </button>
-            <button class="btn-primary" style="padding:6px 12px; font-size:0.85rem;" onclick="closeModal('modal-disease'); triggerStarterPrompt('${escapeJsString((isEn ? 'Tell me more about treating ' : 'विस्तार से बताएं कि ') + dName + (isEn ? ' in ' : ' का ') + cName + (isEn ? '' : ' में उपचार कैसे करें'))}')">
+            <button class="btn-primary" style="padding:7px 14px; font-size:0.86rem;" onclick="closeModal('modal-disease'); triggerStarterPrompt('${escapeJsString((isEn ? 'Tell me more about treating ' : 'विस्तार से बताएं कि ') + dName + (isEn ? ' in ' : ' का ') + cName + (isEn ? '' : ' में उपचार कैसे करें'))}')">
               💬 ${isEn ? 'Chat about this' : 'सहायक से पूछें'}
             </button>
           </div>
         </div>
       `;
     } else {
-      resultArea.innerHTML = `<div style="background:#ffebee; color:#c62828; padding:10px; border-radius:8px;">${data.rejection_reason || data.error || "Analysis failed."}</div>`;
+      resultArea.innerHTML = `<div style="background:#fef2f2; color:#b91c1c; padding:12px; border-radius:8px; border:1px solid #fecaca;">${data.rejection_reason || data.error || "Analysis failed."}</div>`;
     }
   } catch (err) {
-    resultArea.innerHTML = `<div style="color:red; padding:10px;">Error during disease analysis.</div>`;
+    resultArea.innerHTML = `<div style="color:#b91c1c; padding:12px;">Error during disease analysis.</div>`;
   }
 }
 
@@ -994,8 +1263,9 @@ function setupSoilModal() {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const isEn = currentLang === "en";
-    resultArea.innerHTML = `<div style="text-align:center; padding:15px; color:#2e7d32;">🧪 ${isEn ? 'Analyzing Soil Parameters...' : 'मृदा स्वास्थ्य कार्ड का विश्लेषण जारी है...'}</div>`;
+    resultArea.innerHTML = `<div style="text-align:center; padding:18px; color:#059669;">🧪 ${isEn ? 'Analyzing Soil Parameters...' : 'मृदा स्वास्थ्य कार्ड का विश्लेषण जारी है...'}</div>`;
 
+    const feInput = document.getElementById("modal-soil-fe");
     const payload = {
       ph: parseFloat(document.getElementById("modal-soil-ph").value),
       oc: parseFloat(document.getElementById("modal-soil-oc").value),
@@ -1005,7 +1275,7 @@ function setupSoilModal() {
       ec: parseFloat(document.getElementById("modal-soil-ec").value),
       zn: parseFloat(document.getElementById("modal-soil-zn").value),
       s: parseFloat(document.getElementById("modal-soil-s").value),
-      fe: 5.0,
+      fe: feInput ? parseFloat(feInput.value || 5.0) : 5.0,
       state: document.getElementById("modal-soil-state").value,
       district: document.getElementById("modal-soil-district").value
     };
@@ -1035,34 +1305,34 @@ function setupSoilModal() {
 
         const labsHtml = (data.nearby_labs && data.nearby_labs.length > 0)
           ? data.nearby_labs.map((l) => `
-              <div style="background:#fafafa; border:1px solid #e0e0e0; border-radius:6px; padding:8px; margin-bottom:6px; font-size:0.85rem;">
-                <strong style="color:#2e7d32;">${l.name}</strong> (${l.type})<br>
+              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px; margin-bottom:8px; font-size:0.86rem;">
+                <strong style="color:#059669;">${l.name}</strong> (${l.type})<br>
                 <span>📍 ${l.address} | 📞 ${l.contact} | 💰 ${l.fee}</span>
               </div>
             `).join("")
           : "";
 
         resultArea.innerHTML = `
-          <div style="background:#ffffff; border:1px solid #c8e6c9; border-radius:10px; padding:15px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:8px; margin-bottom:10px;">
-              <h3 style="color:#1b5e20;">${isEn ? 'Soil Health Score' : 'मृदा स्वास्थ्य स्कोर'}: ${data.health_score}/100</h3>
-              <span class="badge-pill" style="background:#e8f5e9; color:#2e7d32;">${data.soil_classification.name_hindi}</span>
+          <div style="background:#ffffff; border:1px solid #86efac; border-radius:12px; padding:18px; box-shadow:0 2px 10px rgba(0,0,0,0.04);">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:10px; margin-bottom:12px;">
+              <h3 style="color:#064e3b; font-size:1.15rem;">${isEn ? 'Soil Health Score' : 'मृदा स्वास्थ्य स्कोर'}: ${data.health_score}/100</h3>
+              <span class="badge-pill">${data.soil_classification.name_hindi}</span>
             </div>
-            <p style="margin-bottom:10px; font-size:0.95rem;">${escapeHtml(summary)}</p>
+            <p style="margin-bottom:12px; font-size:0.94rem; line-height:1.55;">${escapeHtml(summary)}</p>
             
-            <h4 style="color:#c62828; margin:10px 0 4px 0;">${isEn ? '⚠️ Detected Nutrient Deficiencies:' : '⚠️ पोषक तत्वों की कमियां:'}</h4>
-            <ul style="padding-left:20px; font-size:0.9rem; margin-bottom:10px;">${defHtml}</ul>
+            <h4 style="color:#b91c1c; margin:12px 0 6px 0;">${isEn ? '⚠️ Detected Nutrient Deficiencies:' : '⚠️ पोषक तत्वों की कमियां:'}</h4>
+            <ul style="padding-left:22px; font-size:0.9rem; margin-bottom:12px; line-height:1.5;">${defHtml}</ul>
 
-            <h4 style="color:#2e7d32; margin:10px 0 4px 0;">${isEn ? '🌾 Corrective Soil Amendments:' : '🌾 सुधारात्मक कृषि सिफारिशें:'}</h4>
-            <ul style="padding-left:20px; font-size:0.9rem; margin-bottom:10px;">${amendHtml}</ul>
+            <h4 style="color:#059669; margin:12px 0 6px 0;">${isEn ? '🌾 Corrective Soil Amendments:' : '🌾 सुधारात्मक कृषि सिफारिशें:'}</h4>
+            <ul style="padding-left:22px; font-size:0.9rem; margin-bottom:12px; line-height:1.5;">${amendHtml}</ul>
 
-            <h4 style="color:#0288d1; margin:12px 0 6px 0;">${isEn ? '🏛️ Nearby Govt Labs & KVKs:' : '🏛️ नजदीकी सरकारी मृदा प्रयोगशालाएं:'}</h4>
+            <h4 style="color:#0284c7; margin:14px 0 8px 0;">${isEn ? '🏛️ Nearby Govt Labs & KVKs:' : '🏛️ नजदीकी सरकारी मृदा प्रयोगशालाएं:'}</h4>
             ${labsHtml}
           </div>
         `;
       }
     } catch (err) {
-      resultArea.innerHTML = `<div style="color:red; padding:10px;">Error analyzing soil parameters.</div>`;
+      resultArea.innerHTML = `<div style="color:#b91c1c; padding:12px;">Error analyzing soil parameters.</div>`;
     }
   });
 }
@@ -1079,7 +1349,7 @@ function setupCropModal() {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const isEn = currentLang === "en";
-    resultArea.innerHTML = `<div style="text-align:center; padding:15px; color:#2e7d32;">🌱 ${isEn ? 'Calculating optimal crops with ML...' : 'मशीन लर्निंग मॉडल द्वारा श्रेष्ठ फसलों की गणना जारी है...'}</div>`;
+    resultArea.innerHTML = `<div style="text-align:center; padding:18px; color:#059669;">🌱 ${isEn ? 'Calculating optimal crops with ML...' : 'मशीन लर्निंग मॉडल द्वारा श्रेष्ठ फसलों की गणना जारी है...'}</div>`;
 
     const payload = {
       n: parseFloat(document.getElementById("modal-crop-n").value),
@@ -1105,13 +1375,13 @@ function setupCropModal() {
         const cardsHtml = data.top_recommendations.map((c, idx) => {
           const cropTitle = isEn ? `${c.crop_key.toUpperCase()} (${c.hindi_name})` : c.hindi_name;
           return `
-            <div style="background:#fafafa; border:1px solid #c8e6c9; border-radius:8px; padding:12px; margin-bottom:10px;">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px; margin-bottom:10px;">
               <div style="display:flex; justify-content:space-between; align-items:center;">
-                <strong style="color:#2e7d32; font-size:1.05rem;">#${idx+1} ${cropTitle}</strong>
-                <span class="badge-pill" style="background:#e8f5e9; color:#2e7d32;">${c.suitability_score}% ${isEn ? 'Suitability' : 'अनुकूलता'}</span>
+                <strong style="color:#059669; font-size:1.05rem;">#${idx+1} ${cropTitle}</strong>
+                <span class="badge-pill">${c.suitability_score}% ${isEn ? 'Suitability' : 'अनुकूलता'}</span>
               </div>
-              <p style="font-size:0.88rem; color:#444; margin:6px 0;">${escapeHtml(c.description)}</p>
-              <div style="font-size:0.8rem; color:#555; display:flex; gap:12px; flex-wrap:wrap;">
+              <p style="font-size:0.88rem; color:#334155; margin:8px 0; line-height:1.45;">${escapeHtml(c.description)}</p>
+              <div style="font-size:0.82rem; color:#64748b; display:flex; gap:14px; flex-wrap:wrap;">
                 <span>📅 ${isEn ? 'Sowing' : 'बुवाई'}: <strong>${c.sowing_months}</strong></span>
                 <span>💧 ${isEn ? 'Water' : 'पानी'}: <strong>${c.water_need}</strong></span>
                 <span>🍂 ${isEn ? 'Season' : 'मौसम'}: <strong>${c.season}</strong></span>
@@ -1121,17 +1391,17 @@ function setupCropModal() {
         }).join("");
 
         resultArea.innerHTML = `
-          <div style="background:#ffffff; border:1px solid #c8e6c9; border-radius:10px; padding:15px;">
-            <h4 style="color:#1b5e20; margin-bottom:10px;">🌟 ${isEn ? 'Top Recommended Crops' : 'शीर्ष अनुशंसित फसलें'} (${data.current_season}):</h4>
+          <div style="background:#ffffff; border:1px solid #86efac; border-radius:12px; padding:18px;">
+            <h4 style="color:#064e3b; margin-bottom:12px;">🌟 ${isEn ? 'Top Recommended Crops' : 'शीर्ष अनुशंसित फसलें'} (${data.current_season}):</h4>
             ${cardsHtml}
-            <div style="background:#f1f8e9; padding:8px 12px; border-radius:6px; font-size:0.85rem; color:#2e7d32; margin-top:8px;">
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px 14px; border-radius:8px; font-size:0.88rem; color:#166534; margin-top:10px;">
               💡 ${escapeHtml(data.summary_hindi)}
             </div>
           </div>
         `;
       }
     } catch (err) {
-      resultArea.innerHTML = `<div style="color:red; padding:10px;">Error calculating crop recommendations.</div>`;
+      resultArea.innerHTML = `<div style="color:#b91c1c; padding:12px;">Error calculating crop recommendations.</div>`;
     }
   });
 }
@@ -1145,7 +1415,7 @@ window.searchSchemesModal = async function() {
   const q = (input && input.value.trim()) || "";
 
   if (!content) return;
-  content.innerHTML = `<div style="text-align:center; padding:15px;">🏛️ ${currentLang === 'hi' ? 'योजनाएं खोजी जा रही हैं...' : 'Searching agricultural schemes...'}</div>`;
+  content.innerHTML = `<div style="text-align:center; padding:18px; color:#059669;">🏛️ ${currentLang === 'hi' ? 'योजनाएं खोजी जा रही हैं...' : 'Searching agricultural schemes...'}</div>`;
 
   try {
     const res = await fetch(`/api/schemes?q=${encodeURIComponent(q)}`);
@@ -1155,25 +1425,25 @@ window.searchSchemesModal = async function() {
     if (data.schemes && data.schemes.length > 0) {
       rewardTaskCompletion(currentLang === "hi" ? "योजनाएं खोजी गईं!" : "Schemes Discovered!", 2500);
       content.innerHTML = data.schemes.map((s) => `
-        <div style="background:#ffffff; border:1px solid #e0e0e0; border-radius:10px; padding:14px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.03);">
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f0f0f0; padding-bottom:6px; margin-bottom:8px;">
-            <h3 style="color:#1b5e20; font-size:1.05rem;">🏛️ ${escapeHtml(s.name)}</h3>
-            <span style="font-size:0.75rem; background:#e0f2f1; color:#00796b; padding:2px 8px; border-radius:10px;">${escapeHtml(s.ministry)}</span>
+        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.03);">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:8px; margin-bottom:10px;">
+            <h3 style="color:#064e3b; font-size:1.05rem;">🏛️ ${escapeHtml(s.name)}</h3>
+            <span style="font-size:0.75rem; background:#ecfdf5; color:#065f46; padding:3px 10px; border-radius:12px; border:1px solid #a7f3d0;">${escapeHtml(s.ministry)}</span>
           </div>
-          <p style="font-size:0.88rem; color:#444; margin-bottom:8px; line-height:1.4;">${escapeHtml(s.objective)}</p>
-          <div style="background:#fafafa; padding:8px 10px; border-radius:6px; font-size:0.82rem; line-height:1.5;">
+          <p style="font-size:0.9rem; color:#334155; margin-bottom:10px; line-height:1.45;">${escapeHtml(s.objective)}</p>
+          <div style="background:#f8fafc; padding:10px 12px; border-radius:8px; font-size:0.84rem; line-height:1.6; border:1px solid #f1f5f9;">
             <strong>🎯 ${isEn ? 'Eligibility' : 'पात्रता'}:</strong> ${escapeHtml(s.eligibility)}<br>
             <strong>💰 ${isEn ? 'Benefits' : 'लाभ'}:</strong> ${escapeHtml(s.benefits)}<br>
             <strong>📝 ${isEn ? 'How to Apply' : 'आवेदन'}:</strong> ${escapeHtml(s.how_to_apply)}<br>
-            <strong>📞 ${isEn ? 'Helpline' : 'हेल्पलाइन'}:</strong> <span style="color:#d32f2f; font-weight:700;">${escapeHtml(s.helpline)}</span>
+            <strong>📞 ${isEn ? 'Helpline' : 'हेल्पलाइन'}:</strong> <span style="color:#dc2626; font-weight:700;">${escapeHtml(s.helpline)}</span>
           </div>
         </div>
       `).join("");
     } else {
-      content.innerHTML = `<div style="text-align:center; color:#777; padding:15px;">${isEn ? 'No schemes found matching query.' : 'कोई योजना नहीं मिली।'}</div>`;
+      content.innerHTML = `<div style="text-align:center; color:#64748b; padding:18px;">${isEn ? 'No schemes found matching query.' : 'कोई योजना नहीं मिली।'}</div>`;
     }
   } catch (err) {
-    content.innerHTML = `<div style="color:red; padding:10px;">Error searching schemes.</div>`;
+    content.innerHTML = `<div style="color:#b91c1c; padding:12px;">Error searching schemes.</div>`;
   }
 };
 
@@ -1192,6 +1462,8 @@ async function loadFarmerProfile() {
       document.getElementById("profile-acres").value = data.farm_size_acres || 3.5;
       document.getElementById("profile-crop").value = data.current_crop || "गेहूं";
       document.getElementById("profile-soil").value = data.soil_type || "जलोढ़ दोमट";
+      const irrEl = document.getElementById("profile-irrigation");
+      if (irrEl) irrEl.value = data.irrigation_type || "ट्यूबवेल";
 
       // Update sidebar footer
       const nameEl = document.getElementById("sidebar-farmer-name");
@@ -1236,7 +1508,7 @@ function setupProfileModal() {
       const data = await res.json();
 
       if (status) {
-        status.innerHTML = `<div style="color:#2e7d32; font-weight:600;">${isEn ? '✅ Profile updated successfully!' : '✅ प्रोफाइल सफलतापूर्वक सुरक्षित हुई!'}</div>`;
+        status.innerHTML = `<div style="color:#059669; font-weight:600; padding:8px 12px; background:#ecfdf5; border-radius:6px;">${isEn ? '✅ Profile updated successfully!' : '✅ प्रोफाइल सफलतापूर्वक सुरक्षित हुई!'}</div>`;
         rewardTaskCompletion(currentLang === "hi" ? "प्रोफाइल सुरक्षित!" : "Profile Saved!", 2500);
         setTimeout(() => { status.innerHTML = ""; }, 3000);
       }
@@ -1249,7 +1521,7 @@ function setupProfileModal() {
 
       loadLiveWeather(payload.district);
     } catch (err) {
-      if (status) status.innerHTML = `<div style="color:red;">Failed to save profile.</div>`;
+      if (status) status.innerHTML = `<div style="color:#b91c1c;">Failed to save profile.</div>`;
     }
   });
 }
@@ -1287,8 +1559,9 @@ window.rewardTaskCompletion = rewardTaskCompletion;
 
 document.addEventListener("DOMContentLoaded", () => {
   if (typeof AntiGravityEngine !== "undefined") {
+    // Note: Exclude modal dialogs and sidebar menu items so modals remain completely stable!
     antigravity = new AntiGravityEngine({
-      selector: '.floatable, [data-anti-gravity], .starter-card, .tool-link-btn, .pill-btn, .weather-pill, .model-badge, .user-profile-widget, .new-chat-btn, .assistant-card, .modal-dialog',
+      selector: '.floatable, [data-anti-gravity], .starter-card, .weather-pill, .model-badge, .hero-icon, .assistant-card',
       gravity: -0.08,
       damping: 0.988,
       elasticity: 0.8,
@@ -1339,5 +1612,3 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
-
-
