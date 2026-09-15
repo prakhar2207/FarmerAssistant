@@ -11,8 +11,7 @@
 let currentSessionId = localStorage.getItem("ks_current_session") || ("session_" + Date.now().toString(36) + Math.random().toString(36).substring(2, 6));
 let currentFarmerId = "default_farmer";
 let currentLang = localStorage.getItem("ks_current_lang") || "en";
-let currentModel = localStorage.getItem("ks_current_model") || "Flash";
-let currentAppMode = "chat"; // "chat" | "spark"
+const ACTIVE_MODEL = "Flash"; // Hardcoded single backend model
 let liveWeatherCache = null;
 let attachedChatFile = null;
 let activeTtsButton = null;
@@ -122,11 +121,10 @@ document.addEventListener("DOMContentLoaded", () => {
   initLanguageSwitcher();
   initSidebar();
   initPlusMenu();
-  initModelPicker();
   initChatInput();
   initVoice();
   initModals();
-  loadLiveWeather();
+  initGeolocationAndWeather();
   loadFarmerProfile();
   loadSessions();
   loadNotebooks();
@@ -134,23 +132,43 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ==========================================
-// Theme Switching (Light / Dark Mode)
+// Dynamic Theme Provider (OS Preference + Manual Override)
 // ==========================================
 function initTheme() {
   const toggleBtn = document.getElementById("theme-toggle-btn");
   const icon = document.getElementById("theme-toggle-icon");
-  const savedTheme = localStorage.getItem("ks_theme");
+  const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
-  if (savedTheme === "light") {
-    document.body.classList.add("light-theme");
-    if (icon) icon.innerText = "🌙";
+  function applyTheme(themeName) {
+    document.body.classList.remove("light-theme", "dark-theme");
+    document.body.classList.add(`${themeName}-theme`);
+    if (icon) {
+      icon.innerText = themeName === "dark" ? "🌙" : "☀️";
+    }
   }
+
+  const savedTheme = localStorage.getItem("ks_theme");
+  if (savedTheme === "light" || savedTheme === "dark") {
+    applyTheme(savedTheme);
+  } else {
+    // Automatically respect system / OS preference
+    applyTheme(mediaQuery.matches ? "dark" : "light");
+  }
+
+  // Listen for live device / OS preference changes
+  mediaQuery.addEventListener("change", (e) => {
+    if (!localStorage.getItem("ks_theme")) {
+      applyTheme(e.matches ? "dark" : "light");
+    }
+  });
 
   if (toggleBtn) {
     toggleBtn.addEventListener("click", () => {
-      const isLight = document.body.classList.toggle("light-theme");
-      localStorage.setItem("ks_theme", isLight ? "light" : "dark");
-      if (icon) icon.innerText = isLight ? "🌙" : "☀️";
+      const isCurrentlyDark = document.body.classList.contains("dark-theme") ||
+        (!document.body.classList.contains("light-theme") && mediaQuery.matches);
+      const newTheme = isCurrentlyDark ? "light" : "dark";
+      localStorage.setItem("ks_theme", newTheme);
+      applyTheme(newTheme);
     });
   }
 }
@@ -233,26 +251,6 @@ function initSidebar() {
     newChatBtn.addEventListener("click", () => {
       startNewChat();
       if (window.innerWidth <= 768) closeSidebar();
-    });
-  }
-
-  // Segmented Mode Pill (Chat vs Spark BETA)
-  const chatBtn = document.getElementById("mode-chat-btn");
-  const sparkBtn = document.getElementById("mode-spark-btn");
-
-  if (chatBtn && sparkBtn) {
-    chatBtn.addEventListener("click", () => {
-      currentAppMode = "chat";
-      chatBtn.classList.add("active");
-      sparkBtn.classList.remove("active");
-      document.getElementById("hero-headline").innerText = I18N[currentLang].hero_headline;
-    });
-
-    sparkBtn.addEventListener("click", () => {
-      currentAppMode = "spark";
-      sparkBtn.classList.add("active");
-      chatBtn.classList.remove("active");
-      document.getElementById("hero-headline").innerText = currentLang === "hi" ? "✨ KrishiSaathi Spark: उन्नत कृषि अनुसंधान व विश्लेषण" : "✨ KrishiSaathi Spark: Advanced Agronomic Deep Research";
     });
   }
 }
@@ -365,44 +363,6 @@ window.toggleMoreToolsSubmenu = function() {
   if (sub) {
     sub.style.display = sub.style.display === "none" ? "flex" : "none";
   }
-};
-
-// ==========================================
-// Model Picker Dropdown (Flash / Pro)
-// ==========================================
-function initModelPicker() {
-  const pickerBtn = document.getElementById("model-picker-btn");
-  const menu = document.getElementById("model-dropdown-menu");
-
-  if (!pickerBtn || !menu) return;
-
-  pickerBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    menu.classList.toggle("active");
-  });
-
-  document.addEventListener("click", (e) => {
-    if (menu.classList.contains("active") && !menu.contains(e.target) && !pickerBtn.contains(e.target)) {
-      menu.classList.remove("active");
-    }
-  });
-
-  selectModel(currentModel, currentModel === "Flash" ? "KrishiSaathi Flash" : "KrishiSaathi Pro");
-}
-
-window.selectModel = function(modelKey, displayName) {
-  currentModel = modelKey;
-  localStorage.setItem("ks_current_model", modelKey);
-
-  const label = document.getElementById("current-model-label");
-  if (label) label.innerText = modelKey;
-
-  document.querySelectorAll(".model-opt").forEach((opt) => {
-    opt.classList.toggle("active", opt.innerText.includes(modelKey));
-  });
-
-  const menu = document.getElementById("model-dropdown-menu");
-  if (menu) menu.classList.remove("active");
 };
 
 // ==========================================
@@ -1260,22 +1220,87 @@ function initModals() {
 }
 
 // ==========================================
-// Live Weather Modal
+// Geolocation & Live Weather Display
 // ==========================================
-async function loadLiveWeather(district = "Lucknow") {
+function getWeatherEmoji(cond) {
+  const c = (cond || "").toLowerCase();
+  if (c.includes("rain") || c.includes("shower") || c.includes("drizzle")) return "🌧️";
+  if (c.includes("cloud") || c.includes("overcast")) return "⛅";
+  if (c.includes("thunder") || c.includes("storm")) return "⛈️";
+  if (c.includes("snow")) return "❄️";
+  if (c.includes("fog") || c.includes("mist") || c.includes("haze")) return "🌫️";
+  return "☀️";
+}
+
+function updateWeatherBadge(cityOrDist, stateCode, temp, cond) {
   const topText = document.getElementById("top-weather-text");
-  try {
-    const res = await fetch(`/api/weather?district=${encodeURIComponent(district)}`);
-    const data = await res.json();
-    if (data.success && data.current) {
-      liveWeatherCache = data;
-      if (topText) {
-        topText.innerHTML = `${data.location}: ${data.current.temperature}°C • ${data.current.condition}`;
+  if (!topText) return;
+  const loc = stateCode ? `${cityOrDist}, ${stateCode}` : cityOrDist;
+  const tempStr = temp !== undefined && temp !== null ? `${Math.round(temp)}°C` : "28°C";
+  const condEmoji = cond ? getWeatherEmoji(cond) : "☀️";
+  topText.innerHTML = `${loc} • ${tempStr} ${condEmoji}`;
+}
+
+async function initGeolocationAndWeather() {
+  async function loadFallback() {
+    try {
+      const res = await fetch("/api/weather?district=Kanpur");
+      const data = await res.json();
+      if (data && data.success && data.current) {
+        liveWeatherCache = data;
+        updateWeatherBadge("Kanpur", "UP", data.current.temperature, data.current.condition);
+      } else {
+        updateWeatherBadge("Kanpur", "UP", 28, "Clear");
       }
+    } catch {
+      updateWeatherBadge("Kanpur", "UP", 28, "Clear");
     }
-  } catch (err) {
-    if (topText) topText.innerText = "Lucknow: 28°C ☀️";
   }
+
+  if (!("geolocation" in navigator)) {
+    loadFallback();
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      try {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        let city = "Kanpur";
+        let stateCode = "UP";
+
+        try {
+          const geoRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+          if (geoRes.ok) {
+            const geoData = await geoRes.json();
+            city = geoData.city || geoData.locality || geoData.principalSubdivision || "Kanpur";
+            const rawState = geoData.principalSubdivisionCode || geoData.principalSubdivision || "";
+            stateCode = rawState.replace(/^IN-/, "").substring(0, 4).toUpperCase() || "UP";
+          }
+        } catch (geoErr) {
+          console.warn("Reverse geocode fallback to backend coords:", geoErr);
+        }
+
+        const res = await fetch(`/api/weather?district=${encodeURIComponent(city)}&lat=${lat}&lon=${lon}`);
+        const data = await res.json();
+        if (data && data.success && data.current) {
+          liveWeatherCache = data;
+          updateWeatherBadge(city, stateCode, data.current.temperature, data.current.condition);
+        } else {
+          updateWeatherBadge(city, stateCode, 28, "Clear");
+        }
+      } catch (err) {
+        console.warn("Geolocation weather error:", err);
+        loadFallback();
+      }
+    },
+    (err) => {
+      console.log("Geolocation permission not granted / fallback used:", err.message);
+      loadFallback();
+    },
+    { timeout: 8000, enableHighAccuracy: false, maximumAge: 300000 }
+  );
 }
 
 window.searchWeatherModal = async function() {
@@ -1293,6 +1318,7 @@ window.searchWeatherModal = async function() {
     if (data.success) {
       liveWeatherCache = data;
       const curr = data.current;
+      updateWeatherBadge(data.location, "", curr.temperature, curr.condition);
 
       let advisoriesHtml = "";
       if (data.agricultural_advisories && data.agricultural_advisories.length > 0) {

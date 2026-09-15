@@ -42,16 +42,6 @@
         </button>
       </div>
 
-      <!-- Mode Switcher Segmented Pill (Chat vs Spark BETA) -->
-      <div class="mode-pill-container">
-        <button class="mode-pill-btn active" id="mode-chat-btn">
-          Chat
-        </button>
-        <button class="mode-pill-btn" id="mode-spark-btn">
-          Spark <span class="beta-badge">BETA</span>
-        </button>
-      </div>
-
       <!-- Core Sidebar Action Menu -->
       <div class="sidebar-menu">
         <button class="sidebar-menu-btn highlight" id="new-chat-btn">
@@ -155,7 +145,7 @@
         <div class="top-nav-right">
           <!-- Weather Quick Pill -->
           <div class="nav-weather-pill" id="nav-weather-pill" onclick="openModal('modal-weather')" title="Weather Forecast">
-            📍 <span id="top-weather-text">Lucknow: 28°C ☀️</span>
+            📍 <span id="top-weather-text">Kanpur, UP • 28°C ☀️</span>
           </div>
 
           <!-- Language Selector -->
@@ -176,11 +166,6 @@
             </svg>
             <span class="sparkle-dot">✦</span>
           </button>
-
-          <!-- Profile Badge -->
-          <button class="top-avatar-btn" onclick="openModal('modal-profile')" title="Profile & Preferences">
-            <span>P</span>
-          </button>
         </div>
       </header>
 
@@ -188,35 +173,8 @@
       <div class="gemini-viewport" id="chat-viewport">
         <div class="gemini-canvas">
           
-          <!-- Empty State Greeting (Matching User Screenshot) -->
+          <!-- Empty State Greeting (Matching User Requirements) -->
           <div class="gemini-hero" id="empty-state-hero">
-            <div class="krishi-hero-emblem">
-              <svg viewBox="0 0 80 80" width="84" height="84" fill="none">
-                <!-- Circular mint background badge -->
-                <circle cx="40" cy="40" r="38" fill="#eafbf3" stroke="#bbf7d0" stroke-width="1.8" />
-                
-                <!-- Left green leaf (rounded loop) -->
-                <path d="M29 46 v16 a4 4 0 0 0 4 4 h2 a4 4 0 0 0 4-4 V46" stroke="#22c55e" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" />
-                
-                <!-- Center green stem bottom -->
-                <path d="M39 66 V48" stroke="#16a34a" stroke-width="3.2" stroke-linecap="round" />
-                
-                <!-- Right curved green leaf -->
-                <path d="M39 64 c4 0 7-3 7-10 c0-5-2-9-2-9" stroke="#15803d" stroke-width="3.4" stroke-linecap="round" />
-                
-                <!-- Tall golden wheat stalk (center) -->
-                <path d="M39 48 V22" stroke="#f59e0b" stroke-width="3.2" stroke-linecap="round" />
-                <path d="M39 24 h14" stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round" />
-                <path d="M39 30 h13" stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round" />
-                <path d="M39 36 h11" stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round" />
-
-                <!-- Shorter golden wheat stalk (right) -->
-                <path d="M46 52 V37" stroke="#fbbf24" stroke-width="3.0" stroke-linecap="round" />
-                <path d="M46 39 h12" stroke="#fbbf24" stroke-width="3.3" stroke-linecap="round" />
-                <path d="M46 44 h11" stroke="#fbbf24" stroke-width="3.3" stroke-linecap="round" />
-                <path d="M46 49 h9" stroke="#fbbf24" stroke-width="3.3" stroke-linecap="round" />
-              </svg>
-            </div>
             <h1 class="hero-headline" id="hero-headline" data-i18n="hero_headline">Welcome Farmer Friend! 🙏</h1>
             <p class="hero-subtext" id="hero-subtext" data-i18n="hero_subtext">
               I am your AI KrishiSaathi assistant. Ask any question about your crops, fertilizer, pests, weather or government schemes via text, voice, or leaf photos.
@@ -352,26 +310,8 @@
             <!-- Textarea -->
             <textarea id="chat-textarea" rows="1" placeholder="Ask KrishiSaathi..." autocomplete="off" aria-label="Query input"></textarea>
 
-            <!-- Right Controls: Model Picker + Mic + Send -->
+            <!-- Right Controls: Mic + Send -->
             <div class="pill-right-controls">
-              
-              <!-- Model Selector Dropdown -->
-              <div class="model-picker-container">
-                <button class="model-picker-btn" id="model-picker-btn" type="button">
-                  <span id="current-model-label">Flash</span>
-                  <span class="caret-down">⌵</span>
-                </button>
-                <div class="model-dropdown-menu" id="model-dropdown-menu">
-                  <button class="model-opt active" onclick="selectModel('Flash', 'KrishiSaathi Flash')">
-                    <div class="model-opt-title">Flash</div>
-                    <div class="model-opt-desc">Fast, multimodal, optimized for everyday agricultural advice</div>
-                  </button>
-                  <button class="model-opt" onclick="selectModel('Pro', 'KrishiSaathi Pro')">
-                    <div class="model-opt-title">Pro</div>
-                    <div class="model-opt-desc">Deep agronomic reasoning, complex multi-crop planning</div>
-                  </button>
-                </div>
-              </div>
 
               <!-- Microphone Voice Input -->
               <button class="pill-action-btn mic-btn" id="chat-mic-btn" title="Voice Input" aria-label="Voice input">

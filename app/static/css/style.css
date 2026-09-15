@@ -4,17 +4,19 @@
    ======================================================== */
 
 :root {
-  --bg-canvas: #131314;
-  --bg-surface: #1e1f20;
-  --bg-surface-hover: #282a2c;
-  --bg-surface-active: #333538;
-  --border-subtle: #2a2b2e;
-  --border-strong: #3c4043;
-  --text-primary: #e3e3e3;
-  --text-secondary: #c4c7c5;
-  --text-muted: #8e918f;
-  --google-blue: #4285f4;
-  --google-purple: #9b72cb;
+  /* Dynamic semantic tokens defaulting to light theme */
+  --bg-canvas: #ffffff;
+  --bg-surface: #f8fafc;
+  --bg-surface-hover: #f1f5f9;
+  --bg-surface-active: #e2e8f0;
+  --border-subtle: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --hero-headline-color: #046a38;
+  --google-blue: #2563eb;
+  --google-purple: #7c3aed;
   --google-red: #ea4335;
   --google-yellow: #fbbc05;
   --gemini-gradient: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
@@ -23,9 +25,29 @@
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-pill: 9999px;
-  --shadow-popup: 0 12px 40px rgba(0, 0, 0, 0.65), 0 2px 10px rgba(0, 0, 0, 0.35);
+  --shadow-popup: 0 12px 35px rgba(0, 0, 0, 0.12), 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
+/* System Dark Theme Preference */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-canvas: #131314;
+    --bg-surface: #1e1f20;
+    --bg-surface-hover: #282a2c;
+    --bg-surface-active: #333538;
+    --border-subtle: #2a2b2e;
+    --border-strong: #3c4043;
+    --text-primary: #e3e3e3;
+    --text-secondary: #c4c7c5;
+    --text-muted: #8e918f;
+    --hero-headline-color: #10b981;
+    --google-blue: #4285f4;
+    --google-purple: #9b72cb;
+    --shadow-popup: 0 12px 40px rgba(0, 0, 0, 0.65), 0 2px 10px rgba(0, 0, 0, 0.35);
+  }
+}
+
+/* Explicit Manual Overrides */
 body.light-theme {
   --bg-canvas: #ffffff;
   --bg-surface: #f8fafc;
@@ -35,8 +57,27 @@ body.light-theme {
   --border-strong: #cbd5e1;
   --text-primary: #0f172a;
   --text-secondary: #334155;
-  --text-muted: #475569;
+  --text-muted: #64748b;
+  --hero-headline-color: #046a38;
+  --google-blue: #2563eb;
+  --google-purple: #7c3aed;
   --shadow-popup: 0 12px 35px rgba(0, 0, 0, 0.12), 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+body.dark-theme {
+  --bg-canvas: #131314;
+  --bg-surface: #1e1f20;
+  --bg-surface-hover: #282a2c;
+  --bg-surface-active: #333538;
+  --border-subtle: #2a2b2e;
+  --border-strong: #3c4043;
+  --text-primary: #e3e3e3;
+  --text-secondary: #c4c7c5;
+  --text-muted: #8e918f;
+  --hero-headline-color: #10b981;
+  --google-blue: #4285f4;
+  --google-purple: #9b72cb;
+  --shadow-popup: 0 12px 40px rgba(0, 0, 0, 0.65), 0 2px 10px rgba(0, 0, 0, 0.35);
 }
 
 * {
@@ -53,6 +94,14 @@ body.gemini-theme {
   height: 100vh;
   overflow: hidden;
   display: flex;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.gemini-sidebar,
+.gemini-top-nav,
+.gemini-input-pill,
+.modal-dialog {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
 }
 
 /* App Wrapper Layout */
@@ -132,55 +181,6 @@ body.gemini-theme {
 .icon-btn:hover {
   background: var(--bg-surface-hover);
   color: var(--text-primary);
-}
-
-/* Mode Switcher Segmented Pill (Chat vs Spark BETA - Screenshot 1) */
-.mode-pill-container {
-  margin: 8px 14px 12px;
-  background: var(--bg-canvas);
-  border-radius: var(--radius-pill);
-  padding: 3px;
-  display: flex;
-  gap: 2px;
-  border: 1px solid var(--border-subtle);
-}
-
-.mode-pill-btn {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  padding: 7px 12px;
-  border-radius: var(--radius-pill);
-  font-size: 0.84rem;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: all 0.2s ease;
-}
-
-.mode-pill-btn.active {
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  font-weight: 600;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
-}
-
-.mode-pill-btn:hover:not(.active) {
-  color: var(--text-secondary);
-}
-
-.beta-badge {
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  background: var(--bg-surface-active);
-  color: var(--text-muted);
-  padding: 2px 5px;
-  border-radius: 4px;
 }
 
 /* Core Navigation Menu Items */
@@ -491,24 +491,8 @@ body.gemini-theme {
   color: var(--google-purple);
 }
 
-.top-avatar-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
-  color: #fff;
-  border: none;
-  font-weight: 700;
-  font-size: 0.9rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-}
-
 /* ========================================================
-   Hero & Empty State (Screenshot 1)
+   Hero & Empty State (Cleaned & Consolidated)
    ======================================================== */
 .gemini-viewport {
   flex: 1;
@@ -538,24 +522,11 @@ body.gemini-theme {
 
 .gemini-hero {
   text-align: center;
-  padding: 10vh 1rem 2rem;
+  padding: 13vh 1.5rem 2.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   animation: heroFadeIn 0.35s ease;
-}
-
-.krishi-hero-emblem {
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  filter: drop-shadow(0 6px 18px rgba(16, 185, 129, 0.2));
-  transition: transform 0.25s ease;
-}
-
-.krishi-hero-emblem:hover {
-  transform: scale(1.04);
 }
 
 .hero-headline {
@@ -568,14 +539,29 @@ body.gemini-theme {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: #046a38;
+  color: var(--hero-headline-color);
   background: linear-gradient(135deg, #059669 0%, #047857 50%, #064e3b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: all 0.25s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  body:not(.light-theme) .hero-headline {
+    background: linear-gradient(135deg, #a7f3d0 0%, #34d399 50%, #10b981 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+body.dark-theme .hero-headline {
+  background: linear-gradient(135deg, #a7f3d0 0%, #34d399 50%, #10b981 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-body.gemini-theme:not(.light-theme) .hero-headline {
-  background: linear-gradient(135deg, #a7f3d0 0%, #34d399 50%, #10b981 100%);
+body.light-theme .hero-headline {
+  background: linear-gradient(135deg, #059669 0%, #047857 50%, #064e3b 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -587,6 +573,7 @@ body.gemini-theme:not(.light-theme) .hero-headline {
   line-height: 1.6;
   margin: 0 auto 2.2rem;
   font-weight: 400;
+  transition: color 0.25s ease;
 }
 
 .gemini-starter-chips {
@@ -1072,95 +1059,11 @@ body.gemini-theme:not(.light-theme) .hero-headline {
   color: var(--text-muted);
 }
 
-/* Right Controls: Model Picker + Mic + Send */
 .pill-right-controls {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
-}
-
-/* Model Selector Dropdown (Flash ⌵) */
-.model-picker-container {
-  position: relative;
-}
-
-.model-picker-btn {
-  background: var(--bg-surface-hover);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-pill);
-  padding: 4px 10px;
-  color: var(--text-secondary);
-  font-size: 0.8rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.model-picker-btn:hover {
-  background: var(--bg-surface-active);
-  color: var(--text-primary);
-}
-
-.caret-down {
-  font-size: 0.72rem;
-  opacity: 0.7;
-}
-
-.model-dropdown-menu {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  right: 0;
-  width: 240px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  padding: 6px;
-  box-shadow: var(--shadow-popup);
-  display: none;
-  flex-direction: column;
-  gap: 4px;
-  z-index: 1000;
-}
-
-.model-dropdown-menu.active {
-  display: flex;
-}
-
-.model-opt {
-  display: flex;
-  flex-direction: column;
-  background: transparent;
-  border: none;
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.model-opt:hover {
-  background: var(--bg-surface-hover);
-}
-
-.model-opt.active {
-  background: rgba(66, 133, 244, 0.12);
-  border: 1px solid rgba(66, 133, 244, 0.3);
-}
-
-.model-opt-title {
-  font-size: 0.86rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.model-opt-desc {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin-top: 2px;
 }
 
 /* Mic & Send Buttons */
